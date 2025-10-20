@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.4.0"
     API_V1_STR: str = "/api/v1"
 
-    class Config:
+    class ConfigDict:
         env_file = ".env"
         extra = "ignore"
 
