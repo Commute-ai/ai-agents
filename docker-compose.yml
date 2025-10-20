@@ -1,0 +1,19 @@
+services:
+  ai-agents:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: commute-ai-ai-agents
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

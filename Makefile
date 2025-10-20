@@ -34,3 +34,27 @@ format:
 	@echo "✨ Formatting code..."
 	uv run black app/ tests/
 	uv run isort app/ tests/
+
+# Docker
+
+.PHONY: docker-build
+docker-build:
+	@echo "🐳 Building Docker image..."
+	docker build -t commute-ai-ai-agents .
+
+.PHONY: docker-up
+docker-up:
+	@echo "🐳 Starting with Docker Compose..."
+	docker compose up -d
+
+.PHONY: docker-down
+docker-down:
+	@echo "🐳 Stopping Docker Compose..."
+	docker compose down
+
+.PHONY: docker-logs
+docker-logs:
+	@echo "📋 Showing Docker logs..."
+	docker compose logs -f
+
+
