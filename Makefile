@@ -1,4 +1,4 @@
-PORT := 8000
+PORT := 8001
 HOST := 0.0.0.0
 
 .PHONY: help
