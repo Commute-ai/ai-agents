@@ -1,0 +1,43 @@
+name: AI Agents CI
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+env:
+  PYTHON_VERSION: 3.11
+  CI: 1
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: 🔗 Sync dependencies
+        run: uv sync --dev
+
+      - name: 🔍 Lint
+        run: |
+          uv run flake8 app/ tests/
+          uv run mypy app/
+          uv run black --check app/ tests/
+          uv run isort --check-only app/ tests/
+
+      - name: 🧪 Test
+        run: |
+          uv run pytest tests/ -v --cov=app --cov-report=term
