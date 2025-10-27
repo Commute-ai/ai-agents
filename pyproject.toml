@@ -11,6 +11,8 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "pytest-cov>=7.0.0",
     "uvicorn[standard]>=0.38.0",
+    "openai",
+    "jinja2"
 ]
 
 [dependency-groups]
