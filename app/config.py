@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -6,10 +6,10 @@ class Settings(BaseSettings):
     PROJECT_DESCRIPTION: str = "AI-powered route analysis and recommendations"
     VERSION: str = "0.4.0"
     API_V1_STR: str = "/api/v1"
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = ""
+    AGENTS_PATH: str = "app/agents"
 
-    class ConfigDict:
-        env_file = ".env"
-        extra = "ignore"
-
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
 settings = Settings()
