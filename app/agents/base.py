@@ -33,7 +33,11 @@ class BaseAgent(Generic[InT, OutT]):
             @classmethod
             def execute(cls, arg: InT) -> OutT:
                 if not isinstance(arg, in_t):
-                    raise TypeError(f"Expected argument of type '{in_t.__module__}.{in_t.__name__}', got {type(arg)}")
+                    raise TypeError(
+                        f"Expected argument of type "
+                        f"'{in_t.__module__}.{in_t.__name__}', "
+                        f"got {type(arg)}"
+                    )
 
                 agent_package = cls.__module__.rsplit(".", 1)[0]
                 pkg = importlib.resources.files(agent_package)
@@ -73,11 +77,17 @@ class BaseAgent(Generic[InT, OutT]):
 
                 missing_keys = REQUIRED_CONFIG_KEYS - model_config.keys()
                 if missing_keys:
-                    raise ValueError(f"Missing required model configuration keys: {', '.join(missing_keys)}")
+                    raise ValueError(
+                        f"Missing required model configuration keys: "
+                        f"{', '.join(missing_keys)}"
+                    )
 
                 extra_keys = set(model_config.keys()) - ALLOWED_CONFIG_KEYS
                 if extra_keys:
-                    raise ValueError(f"Unknown model configuration keys: {', '.join(extra_keys)}")
+                    raise ValueError(
+                        f"Unknown model configuration keys: "
+                        f"{', '.join(extra_keys)}"
+                    )
 
                 model_config = {k: v for k, v in model_config.items() if k in ALLOWED_CONFIG_KEYS}
 
@@ -108,7 +118,7 @@ class BaseAgent(Generic[InT, OutT]):
                     content = "".join(p.get("text", "") for p in content)
 
                 content = content.strip()
-                return out_t.model_validate_json(content)
+                return cast(OutT, out_t.model_validate_json(content))
 
         return BoundBaseAgent
 
