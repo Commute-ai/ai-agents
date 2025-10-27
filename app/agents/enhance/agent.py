@@ -25,5 +25,4 @@ class InputSchema(BaseModel):
     end_location: str
 
 
-class Agent(BaseAgent[InputSchema, OutputSchema]):
-    ...
+class Agent(BaseAgent[InputSchema, OutputSchema]): ...

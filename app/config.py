@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str = ""
     AGENTS_PATH: str = "app/agents"
 
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()

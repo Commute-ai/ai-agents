@@ -1,11 +1,3 @@
-from .agent import (
-    InputSchema,
-    OutputSchema,
-    Agent
-)
+from .agent import Agent, InputSchema, OutputSchema
 
-__all__ = [
-    "InputSchema",
-    "OutputSchema",
-    "Agent"
-]
+__all__ = ["InputSchema", "OutputSchema", "Agent"]

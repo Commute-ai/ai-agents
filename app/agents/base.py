@@ -3,8 +3,10 @@ from __future__ import annotations
 import importlib.resources
 import json
 from typing import (
+    Generic,
+    Iterable,
     TypeVar,
-    Generic, cast, Iterable,
+    cast,
 )
 
 import jinja2
@@ -15,8 +17,8 @@ from pydantic import BaseModel
 
 from app.config import settings
 
-InT = TypeVar('InT', bound=BaseModel)
-OutT = TypeVar('OutT', bound=BaseModel)
+InT = TypeVar("InT", bound=BaseModel)
+OutT = TypeVar("OutT", bound=BaseModel)
 
 
 class BaseAgent(Generic[InT, OutT]):
@@ -62,8 +64,7 @@ class BaseAgent(Generic[InT, OutT]):
                     raise ValueError(f"Invalid Jinja2 template in user prompt file: {e}")
 
                 client = openai.OpenAI(
-                    base_url=settings.OPENAI_BASE_URL,
-                    api_key=settings.OPENAI_API_KEY
+                    base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY
                 )
 
                 REQUIRED_CONFIG_KEYS = {"model"}
@@ -78,15 +79,13 @@ class BaseAgent(Generic[InT, OutT]):
                 missing_keys = REQUIRED_CONFIG_KEYS - model_config.keys()
                 if missing_keys:
                     raise ValueError(
-                        f"Missing required model configuration keys: "
-                        f"{', '.join(missing_keys)}"
+                        f"Missing required model configuration keys: " f"{', '.join(missing_keys)}"
                     )
 
                 extra_keys = set(model_config.keys()) - ALLOWED_CONFIG_KEYS
                 if extra_keys:
                     raise ValueError(
-                        f"Unknown model configuration keys: "
-                        f"{', '.join(extra_keys)}"
+                        f"Unknown model configuration keys: " f"{', '.join(extra_keys)}"
                     )
 
                 model_config = {k: v for k, v in model_config.items() if k in ALLOWED_CONFIG_KEYS}
@@ -96,18 +95,24 @@ class BaseAgent(Generic[InT, OutT]):
 
                 response = client.chat.completions.create(
                     **model_config,
-                    messages=cast(Iterable[ChatCompletionMessageParam], [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ]),
+                    messages=cast(
+                        Iterable[ChatCompletionMessageParam],
+                        [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                    ),
                     stream=False,
-                    response_format=cast(ResponseFormatJSONSchema, {
-                        'type': "json_schema",
-                        'json_schema': {
-                            "name": out_t.__name__,
-                            "schema": out_t.model_json_schema()
-                        }
-                    }),
+                    response_format=cast(
+                        ResponseFormatJSONSchema,
+                        {
+                            "type": "json_schema",
+                            "json_schema": {
+                                "name": out_t.__name__,
+                                "schema": out_t.model_json_schema(),
+                            },
+                        },
+                    ),
                 )
 
                 choice = response.choices[0].message
