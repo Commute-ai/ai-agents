@@ -32,16 +32,15 @@ test-cov:
 .PHONY: lint
 lint:
 	@echo "🔍 Linting code..."
-	uv run flake8 app/ tests/
+	uv run ruff check app/ tests/
+	uv run ruff format --check app/ tests/
 	uv run mypy app/
-	uv run black --check app/ tests/
-	uv run isort --check-only app/ tests/
 
 .PHONY: format
 format:
 	@echo "✨ Formatting code..."
-	uv run black app/ tests/
-	uv run isort app/ tests/
+	uv run ruff check --fix app/ tests/
+	uv run ruff format app/ tests/
 
 # Docker
 
