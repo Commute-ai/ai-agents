@@ -1,0 +1,29 @@
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+from app.schemas.itinerary import Itinerary, ItineraryWithInsight
+from app.schemas.preference import Preference
+
+
+router = APIRouter()
+
+
+class ItineraryInsightsRequest(BaseModel):
+    itineraries: list[Itinerary]
+    user_preferences: list[Preference] | None = None
+
+
+class ItineraryInsightsResponse(BaseModel):
+    itineraries: list[ItineraryWithInsight]
+
+
+@router.post("/routing/insights", response_model=ItineraryInsightsResponse)
+async def generate_itinerary_insights(request: ItineraryInsightsRequest):
+    itineraries_with_insight: list[ItineraryWithInsight] = []
+    for itinerary in request.itineraries:
+        itinerary_with_insight = ItineraryWithInsight(
+            **itinerary.model_dump(), ai_insight="This is a placeholder insight"
+        )
+        itineraries_with_insight.append(itinerary_with_insight)
+
+    return ItineraryInsightsResponse(itineraries=itineraries_with_insight)
