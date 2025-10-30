@@ -48,7 +48,7 @@ class Leg(BaseModel):
 
 
 class LegWithInsight(Leg):
-    ai_insight: str
+    ai_insight: str | None = None
 
 
 class Itinerary(BaseModel):
@@ -63,5 +63,5 @@ class Itinerary(BaseModel):
 
 
 class ItineraryWithInsight(Itinerary):
-    legs: Sequence[LegWithInsight]  # type: ignore[override]
+    legs: Sequence[LegWithInsight]  # pyright: ignore
     ai_insight: str = Field(..., description="Insights from AI")
