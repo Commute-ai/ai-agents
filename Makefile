@@ -5,6 +5,14 @@ HOST := 0.0.0.0
 help:
 	@echo "available commands:"
 	@echo "  dev           - run development server with auto-reload"
+	@echo "  test          - run tests"
+	@echo "  test-cov      - run tests with coverage"
+	@echo "  lint          - run linter"
+	@echo "  format        - run formatter"
+	@echo "  docker-build  - build Docker image"
+	@echo "  docker-up     - start with Docker Compose"
+	@echo "  docker-down   - stop Docker Compose"
+	@echo "  docker-logs   - show Docker logs"
 
 .PHONY: dev
 dev:

@@ -29,12 +29,8 @@ class TransportMode(str, Enum):
 class Route(BaseModel):
     """Route information for a leg of the journey."""
 
-    short_name: str = Field(
-        ..., description="Short name of the route, e.g., bus number"
-    )
-    long_name: str = Field(
-        ..., description="Long name of the route, e.g., full route name"
-    )
+    short_name: str = Field(..., description="Short name of the route, e.g., bus number")
+    long_name: str = Field(..., description="Long name of the route, e.g., full route name")
     description: str | None = Field(..., description="Description of the route")
 
 

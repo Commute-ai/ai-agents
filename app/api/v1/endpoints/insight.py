@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from app.schemas.itinerary import Itinerary, ItineraryWithInsight
 from app.schemas.preference import Preference
 
-
 router = APIRouter()
 
 
