@@ -8,17 +8,17 @@ from app.schemas.preference import Preference
 router = APIRouter()
 
 
-class ItineraryInsightsRequest(BaseModel):
+class ItinerariesRequest(BaseModel):
     itineraries: list[Itinerary]
     user_preferences: list[Preference] | None = None
 
 
-class ItineraryInsightsResponse(BaseModel):
+class ItinerariesResponse(BaseModel):
     itineraries: list[ItineraryWithInsight]
 
 
-@router.post("/routing/insights", response_model=ItineraryInsightsResponse)
-async def generate_itinerary_insights(request: ItineraryInsightsRequest):
+@router.post("/itineraries", response_model=ItinerariesResponse)
+async def generate_itineraries_with_insights(request: ItinerariesRequest):
     itineraries_with_insight: list[ItineraryWithInsight] = []
     for itinerary in request.itineraries:
         itinerary_with_insight = ItineraryWithInsight(
@@ -26,4 +26,4 @@ async def generate_itinerary_insights(request: ItineraryInsightsRequest):
         )
         itineraries_with_insight.append(itinerary_with_insight)
 
-    return ItineraryInsightsResponse(itineraries=itineraries_with_insight)
+    return ItinerariesResponse(itineraries=itineraries_with_insight)
