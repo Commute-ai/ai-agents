@@ -1,7 +1,7 @@
-from typing import Generator
+from collections.abc import Generator
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 
