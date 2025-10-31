@@ -2,12 +2,15 @@
 Insight agent for generating AI-powered travel itinerary analysis.
 """
 
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader
+
 from app.schemas.itinerary import Itinerary, ItineraryWithInsight, LegWithInsight
 from app.schemas.preference import Preference
 from app.services.llm.base import LLMProvider
 
 from .base import AgentValidationError, BaseAgent
-from .prompts.insight import InsightPrompts
 
 
 class InsightAgent(BaseAgent):
@@ -26,7 +29,18 @@ class InsightAgent(BaseAgent):
             llm_provider: LLM provider for generating insights
         """
         super().__init__(llm_provider)
-        self.prompts = InsightPrompts()
+
+        # Set up Jinja2 environment for prompt templates
+        template_dir = Path(__file__).parent / "prompts" / "insight"
+        self.jinja_env = Environment(
+            loader=FileSystemLoader(template_dir),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+
+        # Load templates
+        self.system_template = self.jinja_env.get_template("system.j2")
+        self.user_template = self.jinja_env.get_template("user.j2")
 
     async def run(
         self, itineraries: list[Itinerary], user_preferences: list[Preference] | None = None
@@ -52,14 +66,16 @@ class InsightAgent(BaseAgent):
             formatted_preferences = self._format_preferences(user_preferences)
 
         # Build the user prompt for multiple itineraries
-        user_prompt = self.prompts.build_comparison_prompt(
-            formatted_itineraries, formatted_preferences
-        )
+        user_prompt = self.user_template.render(
+            itineraries=formatted_itineraries,
+            preferences=formatted_preferences,
+            num_itineraries=len(formatted_itineraries),
+        ).strip()
 
         # Generate insights using LLM
         response = await self._generate_response(
             user_prompt=user_prompt,
-            system_prompt=self.prompts.get_system_prompt(),
+            system_prompt=self.system_template.render().strip(),
             max_tokens=1000,
             temperature=0.7,
         )
