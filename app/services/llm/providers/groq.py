@@ -40,7 +40,9 @@ class GroqProvider(LLMProvider):
         self.base_url = base_url or "https://api.groq.com/openai/v1"
 
         # Initialize Groq async client
-        self.client = AsyncGroq(api_key=api_key, base_url=base_url, **kwargs)
+        # Note: AsyncGroq automatically appends /openai/v1 to base_url, so we use the root URL
+        client_base_url = base_url or "https://api.groq.com"
+        self.client = AsyncGroq(api_key=api_key, base_url=client_base_url, **kwargs)
 
     async def generate(
         self,

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.agents.insight import InsightAgent
+from app.dependencies import InsightAgentDep
 from app.schemas.itinerary import Itinerary, ItineraryWithInsight
 from app.schemas.preference import Preference
-from app.services.llm import LLMError, create_llm_from_config
+from app.services.llm import LLMError
 
 router = APIRouter()
 
@@ -19,7 +19,9 @@ class ItinerariesResponse(BaseModel):
 
 
 @router.post("/itineraries", response_model=ItinerariesResponse)
-async def generate_itineraries_with_insights(request: ItinerariesRequest):
+async def generate_itineraries_with_insights(
+    request: ItinerariesRequest, insight_agent: InsightAgentDep
+):
     """
     Generate AI insights for travel itineraries.
 
@@ -28,13 +30,7 @@ async def generate_itineraries_with_insights(request: ItinerariesRequest):
     transfers, and user preferences.
     """
     try:
-        # Create LLM provider from configuration
-        llm_provider = create_llm_from_config()
-
-        # Initialize insight agent
-        insight_agent = InsightAgent(llm_provider)
-
-        # Generate insights for all itineraries
+        # Generate insights for all itineraries using the injected agent
         itineraries_with_insight = await insight_agent.run(
             request.itineraries, request.user_preferences
         )

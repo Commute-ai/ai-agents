@@ -1,35 +1,18 @@
-from unittest.mock import patch
-
 from fastapi.testclient import TestClient
 
-from app.services.llm.base import LLMProvider
+from tests.conftest import MockLLMProvider
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing."""
-
-    def __init__(self, response="Mock AI response", should_fail=False):
-        self.response = response
-        self.should_fail = should_fail
-
-    async def generate(self, messages, max_tokens=None, temperature=None, **kwargs):
-        if self.should_fail:
-            raise Exception("Mock LLM error")
-        return self.response
-
-    async def generate_stream(self, messages, max_tokens=None, temperature=None, **kwargs):
-        if self.should_fail:
-            raise Exception("Mock LLM error")
-        for chunk in ["Mock ", "streaming ", "response"]:
-            yield chunk
-
-
-@patch("app.api.v1.endpoints.insight.create_llm_from_config")
-def test_generate_itineraries_with_insights_success(mock_llm_config, client: TestClient):
+def test_generate_itineraries_with_insights_success(client: TestClient):
     """Test successful insight generation for itineraries"""
     # Mock the LLM provider to return a test response
     mock_provider = MockLLMProvider(response="Test AI insight for this route")
-    mock_llm_config.return_value = mock_provider
+
+    # Override the dependency to use our mock
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
 
     payload = {
         "itineraries": [
@@ -80,12 +63,19 @@ def test_generate_itineraries_with_insights_success(mock_llm_config, client: Tes
     assert itinerary["duration"] == 3600
     assert itinerary["walk_distance"] == 500.0
 
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
-@patch("app.api.v1.endpoints.insight.create_llm_from_config")
-def test_generate_itineraries_with_insights_empty_list(mock_llm_config, client: TestClient):
+
+def test_generate_itineraries_with_insights_empty_list(client: TestClient):
     """Test with empty itineraries list - should return error"""
     mock_provider = MockLLMProvider()
-    mock_llm_config.return_value = mock_provider
+
+    # Override the dependency to use our mock
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
 
     payload = {"itineraries": [], "user_preferences": []}
 
@@ -97,14 +87,20 @@ def test_generate_itineraries_with_insights_empty_list(mock_llm_config, client: 
     assert "detail" in data
     assert "At least one itinerary is required" in data["detail"]
 
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
-@patch("app.api.v1.endpoints.insight.create_llm_from_config")
-def test_generate_itineraries_with_insights_no_preferences(mock_llm_config, client: TestClient):
+
+def test_generate_itineraries_with_insights_no_preferences(client: TestClient):
     """Test without user preferences"""
     mock_provider = MockLLMProvider(
         response="Route Option 1:\nSimple route analysis without preferences"
     )
-    mock_llm_config.return_value = mock_provider
+
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
 
     payload = {
         "itineraries": [
@@ -129,11 +125,11 @@ def test_generate_itineraries_with_insights_no_preferences(mock_llm_config, clie
     assert "ai_insight" in data["itineraries"][0]
     assert "Simple route analysis" in data["itineraries"][0]["ai_insight"]
 
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
-@patch("app.api.v1.endpoints.insight.create_llm_from_config")
-def test_generate_itineraries_with_insights_multiple_itineraries(
-    mock_llm_config, client: TestClient
-):
+
+def test_generate_itineraries_with_insights_multiple_itineraries(client: TestClient):
     """Test with multiple itineraries"""
     mock_provider = MockLLMProvider(
         response="""Route Option 1:
@@ -142,7 +138,11 @@ First route analysis with shorter walking distance.
 Route Option 2:
 Second route analysis with longer walking but similar time."""
     )
-    mock_llm_config.return_value = mock_provider
+
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
 
     payload = {
         "itineraries": [
@@ -177,6 +177,9 @@ Second route analysis with longer walking but similar time."""
     for itinerary in data["itineraries"]:
         assert "ai_insight" in itinerary
         assert len(itinerary["ai_insight"]) > 0
+
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
 
 def test_generate_itineraries_with_insights_invalid_payload(client: TestClient):

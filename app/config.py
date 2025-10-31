@@ -1,4 +1,7 @@
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -8,7 +11,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # LLM Configuration
-    LLM_PROVIDER: str = "groq"  # Default to Groq for fast inference
+    LLM_PROVIDER: str = "groq"
 
     # Groq Configuration
     GROQ_API_KEY: str | None = None
