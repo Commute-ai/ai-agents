@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.dependencies import InsightAgentDep
 from app.schemas.itinerary import Itinerary, ItineraryWithInsight
 from app.schemas.preference import Preference
+from app.services.llm import LLMError
 
 router = APIRouter()
 
@@ -17,12 +19,29 @@ class ItinerariesResponse(BaseModel):
 
 
 @router.post("/itineraries", response_model=ItinerariesResponse)
-async def generate_itineraries_with_insights(request: ItinerariesRequest):
-    itineraries_with_insight: list[ItineraryWithInsight] = []
-    for itinerary in request.itineraries:
-        itinerary_with_insight = ItineraryWithInsight(
-            **itinerary.model_dump(), ai_insight="This is a placeholder insight"
-        )
-        itineraries_with_insight.append(itinerary_with_insight)
+async def generate_itineraries_with_insights(
+    request: ItinerariesRequest, insight_agent: InsightAgentDep
+):
+    """
+    Generate AI insights for travel itineraries.
 
-    return ItinerariesResponse(itineraries=itineraries_with_insight)
+    Uses the configured LLM provider (Groq by default) to analyze routes
+    and provide helpful recommendations based on duration, walking distance,
+    transfers, and user preferences.
+    """
+    try:
+        # Generate insights for all itineraries using the injected agent
+        itineraries_with_insight = await insight_agent.run(
+            request.itineraries, request.user_preferences
+        )
+
+        return ItinerariesResponse(itineraries=itineraries_with_insight)
+
+    except LLMError as e:
+        raise HTTPException(
+            status_code=503, detail=f"AI service temporarily unavailable: {str(e)}"
+        ) from e
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Configuration error: {str(e)}") from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}") from e

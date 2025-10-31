@@ -1,8 +1,19 @@
 from fastapi.testclient import TestClient
 
+from tests.conftest import MockLLMProvider
+
 
 def test_generate_itineraries_with_insights_success(client: TestClient):
     """Test successful insight generation for itineraries"""
+    # Mock the LLM provider to return a test response
+    mock_provider = MockLLMProvider(response="Test AI insight for this route")
+
+    # Override the dependency to use our mock
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
+
     payload = {
         "itineraries": [
             {
@@ -48,26 +59,49 @@ def test_generate_itineraries_with_insights_success(client: TestClient):
 
     itinerary = data["itineraries"][0]
     assert "ai_insight" in itinerary
-    assert itinerary["ai_insight"] == "This is a placeholder insight"
+    assert "Test AI insight" in itinerary["ai_insight"]
     assert itinerary["duration"] == 3600
     assert itinerary["walk_distance"] == 500.0
 
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
+
 
 def test_generate_itineraries_with_insights_empty_list(client: TestClient):
-    """Test with empty itineraries list"""
+    """Test with empty itineraries list - should return error"""
+    mock_provider = MockLLMProvider()
+
+    # Override the dependency to use our mock
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
+
     payload = {"itineraries": [], "user_preferences": []}
 
     response = client.post("/api/v1/insight/itineraries", json=payload)
 
-    assert response.status_code == 200
+    # Should return 500 because agent validates at least one itinerary is required
+    assert response.status_code == 500
     data = response.json()
+    assert "detail" in data
+    assert "At least one itinerary is required" in data["detail"]
 
-    assert "itineraries" in data
-    assert len(data["itineraries"]) == 0
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
 
 def test_generate_itineraries_with_insights_no_preferences(client: TestClient):
     """Test without user preferences"""
+    mock_provider = MockLLMProvider(
+        response="Route Option 1:\nSimple route analysis without preferences"
+    )
+
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
+
     payload = {
         "itineraries": [
             {
@@ -89,10 +123,27 @@ def test_generate_itineraries_with_insights_no_preferences(client: TestClient):
     assert "itineraries" in data
     assert len(data["itineraries"]) == 1
     assert "ai_insight" in data["itineraries"][0]
+    assert "Simple route analysis" in data["itineraries"][0]["ai_insight"]
+
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
 
 def test_generate_itineraries_with_insights_multiple_itineraries(client: TestClient):
     """Test with multiple itineraries"""
+    mock_provider = MockLLMProvider(
+        response="""Route Option 1:
+First route analysis with shorter walking distance.
+
+Route Option 2:
+Second route analysis with longer walking but similar time."""
+    )
+
+    from app.agents.insight import InsightAgent
+    from app.dependencies import get_insight_agent
+
+    client.app.dependency_overrides[get_insight_agent] = lambda: InsightAgent(mock_provider)
+
     payload = {
         "itineraries": [
             {
@@ -122,9 +173,13 @@ def test_generate_itineraries_with_insights_multiple_itineraries(client: TestCli
     assert "itineraries" in data
     assert len(data["itineraries"]) == 2
 
+    # Check that each itinerary has an AI insight
     for itinerary in data["itineraries"]:
         assert "ai_insight" in itinerary
-        assert itinerary["ai_insight"] == "This is a placeholder insight"
+        assert len(itinerary["ai_insight"]) > 0
+
+    # Clean up dependency override
+    client.app.dependency_overrides.clear()
 
 
 def test_generate_itineraries_with_insights_invalid_payload(client: TestClient):

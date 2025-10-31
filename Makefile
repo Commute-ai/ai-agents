@@ -39,7 +39,6 @@ lint:
 .PHONY: format
 format:
 	@echo "✨ Formatting code..."
-	uv run ruff check --fix app/ tests/
 	uv run ruff format app/ tests/
 
 # Docker
