@@ -2,9 +2,11 @@
 Groq provider implementation.
 """
 
-import asyncio
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, cast
+
+from groq import AsyncGroq
+from groq.types.chat import ChatCompletionMessageParam
 
 from ..base import LLMConnectionError, LLMProvider, LLMRateLimitError, LLMValidationError
 
@@ -20,7 +22,7 @@ class GroqProvider(LLMProvider):
     def __init__(
         self,
         api_key: str,
-        model: str = "mixtral-8x7b-32768",
+        model: str = "llama-3.3-70b-versatile",
         base_url: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -29,7 +31,7 @@ class GroqProvider(LLMProvider):
 
         Args:
             api_key: Groq API key
-            model: Groq model name (e.g., "mixtral-8x7b-32768", "llama2-70b-4096")
+            model: Groq model name (e.g., "llama-3.3-70b-versatile", "mixtral-8x7b-32768")
             base_url: Optional custom API base URL
             **kwargs: Additional configuration options
         """
@@ -37,12 +39,8 @@ class GroqProvider(LLMProvider):
         self.model = model
         self.base_url = base_url or "https://api.groq.com/openai/v1"
 
-        # TODO: Initialize Groq client (uses OpenAI-compatible client)
-        # from groq import AsyncGroq
-        # self.client = AsyncGroq(
-        #     api_key=api_key,
-        #     base_url=base_url
-        # )
+        # Initialize Groq async client
+        self.client = AsyncGroq(api_key=api_key, base_url=base_url, **kwargs)
 
     async def generate(
         self,
@@ -63,34 +61,39 @@ class GroqProvider(LLMProvider):
         Returns:
             Generated text response
         """
-        # TODO: Implement Groq API call
         # Set defaults
         max_tokens = max_tokens or 1000
         temperature = temperature or 0.7
 
         try:
-            # TODO: Replace with actual Groq API call
-            # response = await self.client.chat.completions.create(
-            #     model=self.model,
-            #     messages=messages,
-            #     max_tokens=max_tokens,
-            #     temperature=temperature,
-            #     **kwargs
-            # )
-            # return response.choices[0].message.content
+            # Call Groq API - cast messages to proper type for Groq client
+            groq_messages = cast(list[ChatCompletionMessageParam], messages)
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=groq_messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                **kwargs,
+            )
 
-            # Placeholder response
-            await asyncio.sleep(0.05)  # Simulate fast Groq inference
-            return "Placeholder insight from Groq (fast inference)"
+            return response.choices[0].message.content or ""
 
         except Exception as e:
-            # TODO: Handle specific Groq exceptions
-            if "rate_limit" in str(e).lower() or "429" in str(e):
+            # Handle specific Groq exceptions
+            error_str = str(e).lower()
+            if "rate_limit" in error_str or "429" in error_str:
                 raise LLMRateLimitError(f"Groq rate limit exceeded: {e}") from e
-            elif "validation" in str(e).lower() or "invalid" in str(e).lower() or "400" in str(e):
+            elif (
+                "validation" in error_str
+                or "invalid" in error_str
+                or "400" in error_str
+                or "bad request" in error_str
+            ):
                 raise LLMValidationError(f"Groq validation error: {e}") from e
-            elif "unauthorized" in str(e).lower() or "401" in str(e):
+            elif "unauthorized" in error_str or "401" in error_str or "api key" in error_str:
                 raise LLMValidationError(f"Groq authentication error: {e}") from e
+            elif "connection" in error_str or "timeout" in error_str or "network" in error_str:
+                raise LLMConnectionError(f"Groq connection error: {e}") from e
             else:
                 raise LLMConnectionError(f"Groq API error: {e}") from e
 
@@ -123,38 +126,41 @@ class GroqProvider(LLMProvider):
         **kwargs: Any,
     ) -> AsyncGenerator[str, None]:
         """Internal async generator for streaming."""
-        # TODO: Implement Groq streaming API call
         # Set defaults
         max_tokens = max_tokens or 1000
         temperature = temperature or 0.7
 
         try:
-            # TODO: Replace with actual Groq streaming API call
-            # stream = await self.client.chat.completions.create(
-            #     model=self.model,
-            #     messages=messages,
-            #     max_tokens=max_tokens,
-            #     temperature=temperature,
-            #     stream=True,
-            #     **kwargs
-            # )
-            # async for chunk in stream:
-            #     if chunk.choices[0].delta.content is not None:
-            #         yield chunk.choices[0].delta.content
+            # Call Groq streaming API - cast messages to proper type for Groq client
+            groq_messages = cast(list[ChatCompletionMessageParam], messages)
+            stream = await self.client.chat.completions.create(
+                model=self.model,
+                messages=groq_messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+                **kwargs,
+            )
 
-            # Placeholder streaming response (faster than OpenAI)
-            words = "Placeholder streaming insight from Groq fast inference".split()
-            for word in words:
-                await asyncio.sleep(0.02)  # Simulate very fast Groq streaming
-                yield word + " "
+            async for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content is not None:
+                    yield chunk.choices[0].delta.content
 
         except Exception as e:
-            # TODO: Handle specific Groq exceptions
-            if "rate_limit" in str(e).lower() or "429" in str(e):
+            # Handle specific Groq exceptions
+            error_str = str(e).lower()
+            if "rate_limit" in error_str or "429" in error_str:
                 raise LLMRateLimitError(f"Groq rate limit exceeded: {e}") from e
-            elif "validation" in str(e).lower() or "invalid" in str(e).lower() or "400" in str(e):
+            elif (
+                "validation" in error_str
+                or "invalid" in error_str
+                or "400" in error_str
+                or "bad request" in error_str
+            ):
                 raise LLMValidationError(f"Groq validation error: {e}") from e
-            elif "unauthorized" in str(e).lower() or "401" in str(e):
+            elif "unauthorized" in error_str or "401" in error_str or "api key" in error_str:
                 raise LLMValidationError(f"Groq authentication error: {e}") from e
+            elif "connection" in error_str or "timeout" in error_str or "network" in error_str:
+                raise LLMConnectionError(f"Groq connection error: {e}") from e
             else:
                 raise LLMConnectionError(f"Groq API error: {e}") from e
