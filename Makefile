@@ -5,6 +5,14 @@ HOST := 0.0.0.0
 help:
 	@echo "available commands:"
 	@echo "  dev           - run development server with auto-reload"
+	@echo "  test          - run tests"
+	@echo "  test-cov      - run tests with coverage"
+	@echo "  lint          - run linter"
+	@echo "  format        - run formatter"
+	@echo "  docker-build  - build Docker image"
+	@echo "  docker-up     - start with Docker Compose"
+	@echo "  docker-down   - stop Docker Compose"
+	@echo "  docker-logs   - show Docker logs"
 
 .PHONY: dev
 dev:
@@ -24,16 +32,15 @@ test-cov:
 .PHONY: lint
 lint:
 	@echo "🔍 Linting code..."
-	uv run flake8 app/ tests/
+	uv run ruff check app/ tests/
+	uv run ruff format --check app/ tests/
 	uv run mypy app/
-	uv run black --check app/ tests/
-	uv run isort --check-only app/ tests/
 
 .PHONY: format
 format:
 	@echo "✨ Formatting code..."
-	uv run black app/ tests/
-	uv run isort app/ tests/
+	uv run ruff check --fix app/ tests/
+	uv run ruff format app/ tests/
 
 # Docker
 
