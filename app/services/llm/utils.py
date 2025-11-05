@@ -28,7 +28,6 @@ def create_llm_from_config() -> LLMProvider:
             "groq",
             api_key=settings.GROQ_API_KEY,
             model=settings.GROQ_MODEL,
-            base_url=settings.GROQ_BASE_URL,
         )
 
     elif provider_name == "openai":
@@ -39,7 +38,6 @@ def create_llm_from_config() -> LLMProvider:
             "openai",
             api_key=settings.OPENAI_API_KEY,
             model=settings.OPENAI_MODEL,
-            base_url=settings.OPENAI_BASE_URL,
         )
 
     else:

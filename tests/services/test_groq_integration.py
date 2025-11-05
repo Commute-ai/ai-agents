@@ -107,7 +107,6 @@ def test_groq_provider_without_api_key():
     """Test that Groq provider can be instantiated without real API key for testing."""
     provider = GroqProvider(api_key="test-key", model="llama-3.3-70b-versatile")
 
-    assert provider.api_key == "test-key"
-    assert provider.model == "llama-3.3-70b-versatile"
-    assert provider.base_url == "https://api.groq.com/openai/v1"
-    assert provider.client is not None
+    assert provider._api_key == "test-key"
+    assert provider._model == "llama-3.3-70b-versatile"
+    assert provider._client is not None

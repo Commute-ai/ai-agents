@@ -23,7 +23,6 @@ class GroqProvider(LLMProvider):
         self,
         api_key: str,
         model: str = "llama-3.3-70b-versatile",
-        base_url: str | None = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -35,14 +34,9 @@ class GroqProvider(LLMProvider):
             base_url: Optional custom API base URL
             **kwargs: Additional configuration options
         """
-        self.api_key = api_key
-        self.model = model
-        self.base_url = base_url or "https://api.groq.com/openai/v1"
-
-        # Initialize Groq async client
-        # Note: AsyncGroq automatically appends /openai/v1 to base_url, so we use the root URL
-        client_base_url = base_url or "https://api.groq.com"
-        self.client = AsyncGroq(api_key=api_key, base_url=client_base_url, **kwargs)
+        self._api_key = api_key
+        self._model = model
+        self._client = AsyncGroq(api_key=api_key, **kwargs)
 
     async def generate(
         self,
@@ -70,8 +64,8 @@ class GroqProvider(LLMProvider):
         try:
             # Call Groq API - cast messages to proper type for Groq client
             groq_messages = cast(list[ChatCompletionMessageParam], messages)
-            response = await self.client.chat.completions.create(
-                model=self.model,
+            response = await self._client.chat.completions.create(
+                model=self._model,
                 messages=groq_messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -135,8 +129,8 @@ class GroqProvider(LLMProvider):
         try:
             # Call Groq streaming API - cast messages to proper type for Groq client
             groq_messages = cast(list[ChatCompletionMessageParam], messages)
-            stream = await self.client.chat.completions.create(
-                model=self.model,
+            stream = await self._client.chat.completions.create(
+                model=self._model,
                 messages=groq_messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
