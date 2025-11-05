@@ -38,6 +38,25 @@ class GroqProvider(LLMProvider):
         self._model = model
         self._client = AsyncGroq(api_key=api_key, **kwargs)
 
+    def _should_use_json_format(self, messages: list[dict[str, str]]) -> bool:
+        """
+        Determine if JSON format should be used based on message content.
+
+        Groq requires that messages contain the word "json" when using json_object format.
+        This method checks if any message mentions JSON/json to decide if JSON format is appropriate.
+
+        Args:
+            messages: List of message dictionaries
+
+        Returns:
+            True if JSON format should be used, False otherwise
+        """
+        for message in messages:
+            content = message.get("content", "").lower()
+            if "json" in content:
+                return True
+        return False
+
     async def generate(
         self,
         messages: list[dict[str, str]],
@@ -61,17 +80,28 @@ class GroqProvider(LLMProvider):
         max_tokens = max_tokens or 1000
         temperature = temperature or 0.7
 
+        # Determine if JSON format should be used based on message content
+        # Groq requires the word "json" in messages when using json_object format
+        use_json_format = self._should_use_json_format(messages)
+
         try:
             # Call Groq API - cast messages to proper type for Groq client
             groq_messages = cast(list[ChatCompletionMessageParam], messages)
-            response = await self._client.chat.completions.create(
-                model=self._model,
-                messages=groq_messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                response_format={"type": "json_object"},
+
+            # Prepare request parameters
+            request_params = {
+                "model": self._model,
+                "messages": groq_messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
                 **kwargs,
-            )
+            }
+
+            # Only add response_format if JSON is requested and message content supports it
+            if use_json_format:
+                request_params["response_format"] = {"type": "json_object"}
+
+            response = await self._client.chat.completions.create(**request_params)
 
             return response.choices[0].message.content or ""
 
