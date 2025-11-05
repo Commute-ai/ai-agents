@@ -151,6 +151,40 @@ class TestBaseAgent:
                 await test_agent.execute(input_data)
 
     @pytest.mark.asyncio
+    async def test_agent_execute_with_markdown_json(self, test_agent):
+        """Test that JSON wrapped in markdown code blocks is properly parsed."""
+        # Response with JSON wrapped in markdown code blocks
+        test_agent.llm_provider.response = '```json\n{"result": "Markdown wrapped result"}\n```'
+        input_data = InputModel(message="test message")
+
+        # Mock template loading
+        with patch.object(test_agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
+
+            result = await test_agent.execute(input_data)
+            assert isinstance(result, OutputModel)
+            assert result.result == "Markdown wrapped result"
+
+    @pytest.mark.asyncio
+    async def test_agent_execute_with_plain_markdown_blocks(self, test_agent):
+        """Test that plain markdown blocks (without json specifier) are handled."""
+        # Response with JSON wrapped in plain markdown code blocks
+        test_agent.llm_provider.response = '```\n{"result": "Plain markdown result"}\n```'
+        input_data = InputModel(message="test message")
+
+        # Mock template loading
+        with patch.object(test_agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
+
+            result = await test_agent.execute(input_data)
+            assert isinstance(result, OutputModel)
+            assert result.result == "Plain markdown result"
+
+    @pytest.mark.asyncio
     async def test_agent_execute_calls_llm_correctly(self, test_agent):
         """Test that the execute method calls the LLM with correct parameters."""
         test_agent.llm_provider.response = '{"result": "Test result"}'
@@ -173,6 +207,30 @@ class TestBaseAgent:
             assert len(call["messages"]) == 2
             assert call["messages"][0]["role"] == "system"
             assert call["messages"][1]["role"] == "user"
+
+    def test_extract_json_from_response_plain_json(self, test_agent):
+        """Test extracting JSON from plain JSON response."""
+        response = '{"result": "plain json"}'
+        extracted = test_agent._extract_json_from_response(response)
+        assert extracted == '{"result": "plain json"}'
+
+    def test_extract_json_from_response_markdown_json(self, test_agent):
+        """Test extracting JSON from markdown ```json code blocks."""
+        response = '```json\n{"result": "markdown json"}\n```'
+        extracted = test_agent._extract_json_from_response(response)
+        assert extracted == '{"result": "markdown json"}'
+
+    def test_extract_json_from_response_plain_markdown(self, test_agent):
+        """Test extracting JSON from plain ``` code blocks."""
+        response = '```\n{"result": "plain markdown"}\n```'
+        extracted = test_agent._extract_json_from_response(response)
+        assert extracted == '{"result": "plain markdown"}'
+
+    def test_extract_json_from_response_with_whitespace(self, test_agent):
+        """Test extracting JSON with extra whitespace."""
+        response = '  \n```json\n  {"result": "whitespace"}  \n```\n  '
+        extracted = test_agent._extract_json_from_response(response)
+        assert extracted == '{"result": "whitespace"}'
 
 
 class TestAgentExceptions:

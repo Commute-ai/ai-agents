@@ -355,3 +355,37 @@ class TestInsightAgentIntegration:
         # This test may need adjustment based on actual implementation
         call = real_insight_agent.llm_provider.generate_calls[0]
         assert "messages" in call
+
+    @pytest.mark.asyncio
+    async def test_insight_agent_with_markdown_wrapped_json(
+        self, real_insight_agent, sample_itinerary
+    ):
+        """Test that insight agent can handle markdown-wrapped JSON responses."""
+        from app.agents.insight import InsightRequest
+
+        # Response wrapped in markdown code blocks
+        real_insight_agent.llm_provider.response = """```json
+{
+  "itinerary_insights": [
+    {
+      "ai_insight": "This is a markdown-wrapped insight",
+      "leg_insights": [
+        {
+          "ai_insight": "Markdown-wrapped leg insight"
+        }
+      ]
+    }
+  ]
+}
+```"""
+
+        request = InsightRequest(itineraries=[sample_itinerary])
+        result = await real_insight_agent.execute(request)
+
+        assert len(result.itinerary_insights) == 1
+        assert result.itinerary_insights[0].ai_insight == "This is a markdown-wrapped insight"
+        assert len(result.itinerary_insights[0].leg_insights) == 1
+        assert (
+            result.itinerary_insights[0].leg_insights[0].ai_insight
+            == "Markdown-wrapped leg insight"
+        )
