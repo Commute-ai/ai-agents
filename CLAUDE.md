@@ -73,3 +73,4 @@ Located in `app/schemas/`, uses Pydantic for data validation:
 
 ## Project Context
 This is part of the Commute.ai ecosystem focused on AI-powered transportation recommendations. The current implementation provides placeholder AI insights but is structured to integrate real AI analysis of transit itineraries based on user preferences.
+- Never put code in __init__ files
