@@ -1,0 +1,24 @@
+I have {{ itineraries|length }} route options for analysis. Please provide insights for each route option.
+
+{% if user_preferences %}
+User Preferences:
+{% for pref in user_preferences %}
+  - {{ pref.prompt }}
+{% endfor %}
+
+{% endif %}
+Route Options:
+{% for itinerary in itineraries %}
+
+Route Option {{ loop.index }}:
+Journey Duration: {{ (itinerary.duration / 60)|round }} minutes
+Total Walking: {{ itinerary.walk_distance|round }} meters
+Number of Legs: {{ itinerary.legs|length }}
+
+Route Details:
+{% for leg in itinerary.legs %}
+  {{ loop.index }}. {{ leg.mode.value }}{% if leg.from_place and leg.to_place %} from {{ leg.from_place.name }} to {{ leg.to_place.name }}{% endif %} ({{ (leg.duration / 60)|round }} min{% if leg.distance %}, {{ leg.distance|round }}m{% endif %}){% if leg.route and leg.route.short_name %} - Route: {{ leg.route.short_name }}{% endif %}
+{% endfor %}
+{% endfor %}
+
+Please provide specific insights for each route option, highlighting their strengths and considerations for travelers.

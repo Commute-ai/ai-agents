@@ -31,13 +31,10 @@ LLMProviderDep = Annotated[LLMProvider, Depends(get_llm_provider)]
 
 def get_insight_agent(llm_provider: LLMProviderDep) -> InsightAgent:
     """
-    Get an InsightAgent instance with the injected LLM provider.
-
-    Args:
-        llm_provider: The LLM provider dependency
+    Get an InsightAgent instance with LLM provider dependency.
 
     Returns:
-        An initialized InsightAgent instance
+        An InsightAgent instance configured with the LLM provider
     """
     return InsightAgent(llm_provider)
 
