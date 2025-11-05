@@ -68,11 +68,40 @@ class BaseAgent:
 
         # Parse and validate response
         try:
-            return self.output_model.model_validate_json(response)
+            # Extract JSON from markdown code blocks if present
+            json_content = self._extract_json_from_response(response)
+            return self.output_model.model_validate_json(json_content)
         except Exception as e:
             raise AgentProcessingError(
                 f"Failed to parse response as {self.output_model.__name__}: {e}"
             ) from e
+
+    def _extract_json_from_response(self, response: str) -> str:
+        """
+        Extract JSON content from LLM response, handling markdown code blocks.
+
+        Args:
+            response: Raw response from LLM
+
+        Returns:
+            Clean JSON string
+        """
+        import re
+
+        # Remove leading/trailing whitespace
+        response = response.strip()
+
+        # Check if response is wrapped in markdown code blocks
+        if response.startswith("```"):
+            # Use regex to extract content between code blocks
+            # Handles both ```json and ``` variants
+            pattern = r"```(?:json)?\s*\n?(.*?)\n?```"
+            match = re.search(pattern, response, re.DOTALL)
+            if match:
+                return match.group(1).strip()
+
+        # If no code blocks found, return original response
+        return response
 
     def _load_template(self, template_name: str) -> jinja2.Template:
         """Load and compile a Jinja2 template."""
