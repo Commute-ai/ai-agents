@@ -1,8 +1,11 @@
+from typing import cast
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.agents.insight import InsightRequest, InsightResponse
 from app.dependencies import InsightAgentDep
-from app.schemas.itinerary import Itinerary, ItineraryWithInsight
+from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
 from app.services.llm import LLMError
 
@@ -15,7 +18,7 @@ class ItinerariesRequest(BaseModel):
 
 
 class ItinerariesResponse(BaseModel):
-    itineraries: list[ItineraryWithInsight]
+    itinerary_insights: list[ItineraryInsight]
 
 
 @router.post("/itineraries", response_model=ItinerariesResponse)
@@ -30,12 +33,15 @@ async def generate_itineraries_with_insights(
     transfers, and user preferences.
     """
     try:
-        # Generate insights for all itineraries using the injected agent
-        itineraries_with_insight = await insight_agent.run(
-            request.itineraries, request.user_preferences
+        # Create insight request
+        insight_request = InsightRequest(
+            itineraries=request.itineraries, user_preferences=request.user_preferences
         )
 
-        return ItinerariesResponse(itineraries=itineraries_with_insight)
+        # Generate insights using the agent
+        insight_response = cast(InsightResponse, await insight_agent.execute(insight_request))
+
+        return ItinerariesResponse(itinerary_insights=insight_response.itinerary_insights)
 
     except LLMError as e:
         raise HTTPException(

@@ -5,7 +5,7 @@ Insight agent for generating AI-powered travel itinerary analysis.
 from pydantic import BaseModel, field_validator
 
 from app.agents.base import BaseAgent
-from app.schemas.itinerary import Itinerary
+from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
 from app.services.llm.base import LLMProvider
 
@@ -27,7 +27,7 @@ class InsightRequest(BaseModel):
 class InsightResponse(BaseModel):
     """Response schema for insight generation."""
 
-    insights: list[str]
+    itinerary_insights: list[ItineraryInsight]
 
 
 class InsightAgent(BaseAgent):
