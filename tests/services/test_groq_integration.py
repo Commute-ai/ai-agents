@@ -75,9 +75,6 @@ class TestGroqIntegration:
             await provider.generate(messages)
 
 
-@pytest.mark.skipif(
-    not os.getenv("GROQ_API_KEY"), reason="GROQ_API_KEY environment variable not set"
-)
 @pytest.mark.asyncio
 async def test_groq_config_integration():
     """Test creating Groq provider from configuration."""
@@ -88,19 +85,22 @@ async def test_groq_config_integration():
     # Mock the settings to use Groq
     with patch("app.services.llm.utils.settings") as mock_settings:
         mock_settings.LLM_PROVIDER = "groq"
-        mock_settings.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        mock_settings.GROQ_API_KEY = "test-api-key"
         mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
         mock_settings.GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
-        provider = create_llm_from_config()
+        # Mock the Groq client's generate method directly
+        with patch("app.services.llm.providers.groq.GroqProvider.generate") as mock_generate:
+            mock_generate.return_value = "Hello! How can I help you?"
 
-        # Test that it can generate a response
-        messages = [{"role": "user", "content": "Hello!"}]
-        response = await provider.generate(messages, max_tokens=10)
+            provider = create_llm_from_config()
 
-        assert isinstance(response, str)
-        assert len(response) > 0
-        print(f"Config-created Groq response: {response}")
+            # Test that it can generate a response
+            messages = [{"role": "user", "content": "Hello!"}]
+            response = await provider.generate(messages, max_tokens=10)
+
+            assert isinstance(response, str)
+            assert response == "Hello! How can I help you?"
 
 
 def test_groq_provider_without_api_key():

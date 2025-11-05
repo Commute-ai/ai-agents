@@ -2,6 +2,9 @@
 Tests for the base agent class.
 """
 
+from unittest.mock import MagicMock, patch
+
+from pydantic import BaseModel
 import pytest
 
 from app.agents.base import AgentError, AgentProcessingError, AgentValidationError, BaseAgent
@@ -50,22 +53,26 @@ class MockLLMProvider(LLMProvider):
             yield chunk
 
 
+class InputModel(BaseModel):
+    """Test input model."""
+
+    message: str
+
+
+class OutputModel(BaseModel):
+    """Test output model."""
+
+    result: str
+
+
 class ConcreteTestAgent(BaseAgent):
     """Concrete test implementation of BaseAgent."""
 
-    def __init__(self, llm_provider, return_value="Test result", should_fail=False):
+    input_model = InputModel
+    output_model = OutputModel
+
+    def __init__(self, llm_provider):
         super().__init__(llm_provider)
-        self.return_value = return_value
-        self.should_fail = should_fail
-        self.run_calls = []
-
-    async def run(self, *args, **kwargs):
-        self.run_calls.append({"args": args, "kwargs": kwargs})
-
-        if self.should_fail:
-            raise AgentProcessingError("Test agent failed")
-
-        return self.return_value
 
 
 class TestBaseAgent:
@@ -82,78 +89,90 @@ class TestBaseAgent:
     def test_agent_initialization(self, mock_llm):
         """Test that agent is properly initialized with LLM provider."""
         agent = ConcreteTestAgent(mock_llm)
-        assert agent.llm == mock_llm
+        assert agent.llm_provider == mock_llm
+        assert agent.input_model == InputModel
+        assert agent.output_model == OutputModel
 
     @pytest.mark.asyncio
-    async def test_agent_run_method(self, test_agent):
-        """Test that the run method can be called and returns expected result."""
-        result = await test_agent.run("test_arg", test_kwarg="test_value")
-        assert result == "Test result"
-        assert len(test_agent.run_calls) == 1
-        assert test_agent.run_calls[0]["args"] == ("test_arg",)
-        assert test_agent.run_calls[0]["kwargs"] == {"test_kwarg": "test_value"}
+    async def test_agent_execute_method(self, test_agent):
+        """Test that the execute method can be called and returns expected result."""
+
+        test_agent.llm_provider.response = '{"result": "Test result"}'
+        input_data = InputModel(message="test message")
+
+        # Mock template loading to avoid file system dependencies
+        with patch.object(test_agent, "_load_template") as mock_load:
+            from unittest.mock import MagicMock
+
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
+
+            result = await test_agent.execute(input_data)
+            assert isinstance(result, OutputModel)
+            assert result.result == "Test result"
 
     @pytest.mark.asyncio
-    async def test_agent_run_failure(self, mock_llm):
-        """Test that agent failures are properly handled."""
-        failing_agent = ConcreteTestAgent(mock_llm, should_fail=True)
-
-        with pytest.raises(AgentProcessingError, match="Test agent failed"):
-            await failing_agent.run()
-
-    def test_build_system_prompt_default(self, test_agent):
-        """Test the default system prompt."""
-        prompt = test_agent._build_system_prompt()
-        assert prompt == "You are a helpful AI assistant."
+    async def test_agent_execute_validation_error(self, test_agent):
+        """Test that input validation works correctly."""
+        # This should raise a validation error since we're passing wrong input type
+        with pytest.raises(AgentValidationError):
+            await test_agent.execute("not a pydantic model")
 
     @pytest.mark.asyncio
-    async def test_generate_response_basic(self, test_agent):
-        """Test basic response generation."""
-        response = await test_agent._generate_response("Test user prompt")
+    async def test_agent_execute_llm_error(self, mock_llm):
+        """Test that LLM errors are properly propagated."""
+        mock_llm.should_fail = True
+        agent = ConcreteTestAgent(mock_llm)
+        input_data = InputModel(message="test message")
 
-        assert response == "Mock LLM response"
-        assert len(test_agent.llm.generate_calls) == 1
+        # Mock template loading
+        with patch.object(agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
 
-        call = test_agent.llm.generate_calls[0]
-        assert len(call["messages"]) == 2
-        assert call["messages"][0]["role"] == "system"
-        assert call["messages"][0]["content"] == "You are a helpful AI assistant."
-        assert call["messages"][1]["role"] == "user"
-        assert call["messages"][1]["content"] == "Test user prompt"
-
-    @pytest.mark.asyncio
-    async def test_generate_response_with_custom_system_prompt(self, test_agent):
-        """Test response generation with custom system prompt."""
-        custom_system = "You are a specialized assistant."
-        response = await test_agent._generate_response(
-            "Test user prompt", system_prompt=custom_system
-        )
-
-        assert response == "Mock LLM response"
-        call = test_agent.llm.generate_calls[0]
-        assert call["messages"][0]["content"] == custom_system
+            with pytest.raises(LLMError):
+                await agent.execute(input_data)
 
     @pytest.mark.asyncio
-    async def test_generate_response_with_generation_kwargs(self, test_agent):
-        """Test response generation with additional parameters."""
-        response = await test_agent._generate_response(
-            "Test user prompt", max_tokens=100, temperature=0.7, custom_param="test_value"
-        )
+    async def test_agent_execute_json_parsing_error(self, test_agent):
+        """Test that invalid JSON responses are handled."""
+        test_agent.llm_provider.response = "invalid json"
+        input_data = InputModel(message="test message")
 
-        assert response == "Mock LLM response"
-        call = test_agent.llm.generate_calls[0]
-        assert call["max_tokens"] == 100
-        assert call["temperature"] == 0.7
-        assert call["kwargs"]["custom_param"] == "test_value"
+        # Mock template loading
+        with patch.object(test_agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
+
+            with pytest.raises(AgentProcessingError):
+                await test_agent.execute(input_data)
 
     @pytest.mark.asyncio
-    async def test_generate_response_llm_error(self, mock_llm):
-        """Test handling of LLM errors during generation."""
-        failing_llm = MockLLMProvider(should_fail=True)
-        agent = ConcreteTestAgent(failing_llm)
+    async def test_agent_execute_calls_llm_correctly(self, test_agent):
+        """Test that the execute method calls the LLM with correct parameters."""
+        test_agent.llm_provider.response = '{"result": "Test result"}'
+        input_data = InputModel(message="test message")
 
-        with pytest.raises(LLMError, match="Mock LLM error"):
-            await agent._generate_response("Test prompt")
+        # Mock template loading
+        with patch.object(test_agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
+
+            await test_agent.execute(input_data)
+
+            # Check that LLM was called
+            assert len(test_agent.llm_provider.generate_calls) == 1
+            call = test_agent.llm_provider.generate_calls[0]
+
+            # Check that messages were passed correctly
+            assert "messages" in call
+            assert len(call["messages"]) == 2
+            assert call["messages"][0]["role"] == "system"
+            assert call["messages"][1]["role"] == "user"
 
 
 class TestAgentExceptions:
@@ -180,60 +199,51 @@ class TestAgentIntegration:
     """Integration tests for agent functionality."""
 
     @pytest.fixture
-    def multi_response_llm(self):
-        """LLM that tracks multiple calls."""
-        return MockLLMProvider(response="Response from LLM")
+    def mock_llm(self):
+        return MockLLMProvider()
 
     @pytest.fixture
-    def agent_with_tracking(self, multi_response_llm):
-        return ConcreteTestAgent(multi_response_llm)
+    def test_agent(self, mock_llm):
+        return ConcreteTestAgent(mock_llm)
 
     @pytest.mark.asyncio
-    async def test_multiple_generate_calls(self, agent_with_tracking):
-        """Test that multiple generation calls work correctly."""
-        # First call
-        response1 = await agent_with_tracking._generate_response("First prompt")
-        assert response1 == "Response from LLM"
+    async def test_multiple_execute_calls(self, test_agent):
+        """Test that multiple executions work correctly."""
+        test_agent.llm_provider.response = '{"result": "Response"}'
+        input_data = InputModel(message="test")
 
-        # Second call with different parameters
-        response2 = await agent_with_tracking._generate_response(
-            "Second prompt", system_prompt="Custom system", max_tokens=50
-        )
-        assert response2 == "Response from LLM"
+        # Mock template loading
+        with patch.object(test_agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
 
-        # Verify both calls were tracked
-        assert len(agent_with_tracking.llm.generate_calls) == 2
+            # Make multiple calls
+            result1 = await test_agent.execute(input_data)
+            result2 = await test_agent.execute(input_data)
 
-        # Verify first call
-        call1 = agent_with_tracking.llm.generate_calls[0]
-        assert call1["messages"][1]["content"] == "First prompt"
-        assert call1["max_tokens"] is None
-
-        # Verify second call
-        call2 = agent_with_tracking.llm.generate_calls[1]
-        assert call2["messages"][0]["content"] == "Custom system"
-        assert call2["messages"][1]["content"] == "Second prompt"
-        assert call2["max_tokens"] == 50
+            assert result1.result == "Response"
+            assert result2.result == "Response"
+            assert len(test_agent.llm_provider.generate_calls) == 2
 
     @pytest.mark.asyncio
-    async def test_agent_with_different_llm_responses(self):
-        """Test agent behavior with different LLM responses."""
-        # Test with empty response
-        empty_llm = MockLLMProvider(response="")
-        empty_agent = ConcreteTestAgent(empty_llm)
-        response = await empty_agent._generate_response("Test")
-        assert response == ""
+    async def test_agent_with_different_llm_responses(self, mock_llm):
+        """Test agent with different LLM responses."""
+        agent = ConcreteTestAgent(mock_llm)
+        input_data = InputModel(message="test")
 
-        # Test with long response
-        long_response = "This is a very long response " * 100
-        long_llm = MockLLMProvider(response=long_response)
-        long_agent = ConcreteTestAgent(long_llm)
-        response = await long_agent._generate_response("Test")
-        assert response == long_response
+        # Mock template loading
+        with patch.object(agent, "_load_template") as mock_load:
+            mock_template = MagicMock()
+            mock_template.render.return_value = "Mocked template content"
+            mock_load.return_value = mock_template
 
-        # Test with special characters
-        special_response = "Response with émojis 🎉 and símböls!"
-        special_llm = MockLLMProvider(response=special_response)
-        special_agent = ConcreteTestAgent(special_llm)
-        response = await special_agent._generate_response("Test")
-        assert response == special_response
+            # First call
+            mock_llm.response = '{"result": "First response"}'
+            result1 = await agent.execute(input_data)
+            assert result1.result == "First response"
+
+            # Second call with different response
+            mock_llm.response = '{"result": "Second response"}'
+            result2 = await agent.execute(input_data)
+            assert result2.result == "Second response"
