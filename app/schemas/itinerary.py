@@ -31,7 +31,7 @@ class Route(BaseModel):
 
     short_name: str = Field(..., description="Short name of the route, e.g., bus number")
     long_name: str = Field(..., description="Long name of the route, e.g., full route name")
-    description: str | None = Field(..., description="Description of the route")
+    description: str | None = Field(None, description="Description of the route")
 
 
 class Leg(BaseModel):
