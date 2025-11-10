@@ -101,6 +101,9 @@ class GroqProvider(LLMProvider):
             if use_json_format:
                 request_params["response_format"] = {"type": "json_object"}
 
+            # if "openai" in self._model:
+            #     request_params["tools"] = [{"type": "browser_search"}]
+
             response = await self._client.chat.completions.create(**request_params)
 
             return response.choices[0].message.content or ""
