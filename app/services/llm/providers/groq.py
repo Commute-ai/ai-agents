@@ -69,7 +69,7 @@ class GroqProvider(LLMProvider):
 
         Args:
             messages: List of message dictionaries
-            max_tokens: Maximum tokens to generate (default: 1000)
+            max_tokens: Maximum tokens to generate (default: 2048)
             temperature: Sampling temperature (default: 0.7)
             **kwargs: Additional Groq-specific parameters
 
@@ -77,8 +77,8 @@ class GroqProvider(LLMProvider):
             Generated text response
         """
         # Set defaults
-        max_tokens = max_tokens or 1000
-        temperature = temperature or 0.7
+        max_tokens = max_tokens or 2048
+        temperature = temperature or 0.5
 
         # Determine if JSON format should be used based on message content
         # Groq requires the word "json" in messages when using json_object format
