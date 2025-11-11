@@ -1,0 +1,417 @@
+{
+  "itineraries": [
+    {
+      "start": "2025-11-09T18:44:32+02:00",
+      "end": "2025-11-09T19:12:37+02:00",
+      "duration": 1685,
+      "walk_distance": 723.8,
+      "walk_time": 811,
+      "legs": [
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T18:44:32+02:00",
+          "end": "2025-11-09T18:45:04+02:00",
+          "duration": 32,
+          "distance": 40.95,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.1687,
+              "longitude": 24.9315
+            },
+            "name": "Origin"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.16883,
+              "longitude": 24.931215
+            },
+            "name": "Kamppi"
+          },
+          "route": null
+        },
+        {
+          "mode": "SUBWAY",
+          "start": "2025-11-09T18:45:00+02:00",
+          "end": "2025-11-09T18:49:00+02:00",
+          "duration": 215,
+          "distance": 2022.46,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.16883,
+              "longitude": 24.931215
+            },
+            "name": "Kamppi"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.180481,
+              "longitude": 24.950188
+            },
+            "name": "Hakaniemi"
+          },
+          "route": {
+            "short_name": "M1",
+            "long_name": "Kivenlahti - Vuosaari",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T18:48:39+02:00",
+          "end": "2025-11-09T18:53:01+02:00",
+          "duration": 262,
+          "distance": 202.81,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.180481,
+              "longitude": 24.950188
+            },
+            "name": "Hakaniemi"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.17932,
+              "longitude": 24.95073
+            },
+            "name": "Hakaniemi"
+          },
+          "route": null
+        },
+        {
+          "mode": "BUS",
+          "start": "2025-11-09T18:55:00+02:00",
+          "end": "2025-11-09T19:04:00+02:00",
+          "duration": 540,
+          "distance": 3105.61,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.17932,
+              "longitude": 24.95073
+            },
+            "name": "Hakaniemi"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "route": {
+            "short_name": "739",
+            "long_name": "Rautatientori-Kuninkaanmäki-Nikinmäk-Korso",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T19:04:00+02:00",
+          "end": "2025-11-09T19:12:37+02:00",
+          "duration": 517,
+          "distance": 480.04,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.2048,
+              "longitude": 24.9615
+            },
+            "name": "Destination"
+          },
+          "route": null
+        }
+      ]
+    },
+    {
+      "start": "2025-11-09T18:55:11+02:00",
+      "end": "2025-11-09T19:19:37+02:00",
+      "duration": 1466,
+      "walk_distance": 398.74,
+      "walk_time": 376,
+      "legs": [
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T18:55:11+02:00",
+          "end": "2025-11-09T18:55:43+02:00",
+          "duration": 32,
+          "distance": 40.95,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.1687,
+              "longitude": 24.9315
+            },
+            "name": "Origin"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.16883,
+              "longitude": 24.931215
+            },
+            "name": "Kamppi"
+          },
+          "route": null
+        },
+        {
+          "mode": "SUBWAY",
+          "start": "2025-11-09T18:55:00+02:00",
+          "end": "2025-11-09T19:02:00+02:00",
+          "duration": 420,
+          "distance": 4092.93,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.16883,
+              "longitude": 24.931215
+            },
+            "name": "Kamppi"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.187389,
+              "longitude": 24.977068
+            },
+            "name": "Kalasatama"
+          },
+          "route": {
+            "short_name": "M1",
+            "long_name": "Kivenlahti - Vuosaari",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T19:02:43+02:00",
+          "end": "2025-11-09T19:04:50+02:00",
+          "duration": 127,
+          "distance": 137.09,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.187389,
+              "longitude": 24.977068
+            },
+            "name": "Kalasatama"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.188285,
+              "longitude": 24.976496
+            },
+            "name": "Kalasatama (M)"
+          },
+          "route": null
+        },
+        {
+          "mode": "BUS",
+          "start": "2025-11-09T19:07:00+02:00",
+          "end": "2025-11-09T19:16:00+02:00",
+          "duration": 540,
+          "distance": 2703.18,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.188285,
+              "longitude": 24.976496
+            },
+            "name": "Kalasatama (M)"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.20583,
+              "longitude": 24.96293
+            },
+            "name": "A.I. Virtasen aukio"
+          },
+          "route": {
+            "short_name": "56",
+            "long_name": "Kalasatama(M)-Käpylä-Kannelmäki",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T19:16:00+02:00",
+          "end": "2025-11-09T19:19:37+02:00",
+          "duration": 217,
+          "distance": 220.7,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.20583,
+              "longitude": 24.96293
+            },
+            "name": "A.I. Virtasen aukio"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.2048,
+              "longitude": 24.9615
+            },
+            "name": "Destination"
+          },
+          "route": null
+        }
+      ]
+    },
+    {
+      "start": "2025-11-09T18:45:14+02:00",
+      "end": "2025-11-09T19:19:37+02:00",
+      "duration": 2063,
+      "walk_distance": 1275.23,
+      "walk_time": 1223,
+      "legs": [
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T18:45:14+02:00",
+          "end": "2025-11-09T18:57:00+02:00",
+          "duration": 706,
+          "distance": 795.19,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.1687,
+              "longitude": 24.9315
+            },
+            "name": "Origin"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.17133,
+              "longitude": 24.94277
+            },
+            "name": "Rautatientori"
+          },
+          "route": null
+        },
+        {
+          "mode": "BUS",
+          "start": "2025-11-09T18:57:00+02:00",
+          "end": "2025-11-09T19:11:00+02:00",
+          "duration": 840,
+          "distance": 4392.86,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.17133,
+              "longitude": 24.94277
+            },
+            "name": "Rautatientori"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "route": {
+            "short_name": "717",
+            "long_name": "Rautatientori-Jakomäki-Hakunila-Honkanummi-Tikkurila",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T19:11:00+02:00",
+          "end": "2025-11-09T19:19:37+02:00",
+          "duration": 517,
+          "distance": 480.04,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.2048,
+              "longitude": 24.9615
+            },
+            "name": "Destination"
+          },
+          "route": null
+        }
+      ]
+    },
+    {
+      "start": "2025-11-09T18:48:03+02:00",
+      "end": "2025-11-09T19:23:37+02:00",
+      "duration": 2134,
+      "walk_distance": 1289.5,
+      "walk_time": 1234,
+      "legs": [
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T18:48:03+02:00",
+          "end": "2025-11-09T19:00:00+02:00",
+          "duration": 717,
+          "distance": 809.46,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.1687,
+              "longitude": 24.9315
+            },
+            "name": "Origin"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.17132,
+              "longitude": 24.94302
+            },
+            "name": "Rautatientori"
+          },
+          "route": null
+        },
+        {
+          "mode": "BUS",
+          "start": "2025-11-09T19:00:00+02:00",
+          "end": "2025-11-09T19:15:00+02:00",
+          "duration": 900,
+          "distance": 4385.17,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.17132,
+              "longitude": 24.94302
+            },
+            "name": "Rautatientori"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "route": {
+            "short_name": "77",
+            "long_name": "Rautatientori-Tattarisuo-Jakomäki",
+            "description": null
+          }
+        },
+        {
+          "mode": "WALK",
+          "start": "2025-11-09T19:15:00+02:00",
+          "end": "2025-11-09T19:23:37+02:00",
+          "duration": 517,
+          "distance": 480.04,
+          "from_place": {
+            "coordinates": {
+              "latitude": 60.203679,
+              "longitude": 24.965952
+            },
+            "name": "Kumpulan kampus"
+          },
+          "to_place": {
+            "coordinates": {
+              "latitude": 60.2048,
+              "longitude": 24.9615
+            },
+            "name": "Destination"
+          },
+          "route": null
+        }
+      ]
+    }
+  ],
+  "user_preferences": []
+}

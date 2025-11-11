@@ -31,7 +31,7 @@ class Route(BaseModel):
 
     short_name: str = Field(..., description="Short name of the route, e.g., bus number")
     long_name: str = Field(..., description="Long name of the route, e.g., full route name")
-    description: str | None = Field(..., description="Description of the route")
+    description: str | None = Field(None, description="Description of the route")
 
 
 class Leg(BaseModel):
@@ -47,10 +47,6 @@ class Leg(BaseModel):
     route: Route | None = None
 
 
-class LegWithInsight(Leg):
-    ai_insight: str | None = None
-
-
 class Itinerary(BaseModel):
     """A complete journey from origin to destination."""
 
@@ -62,6 +58,14 @@ class Itinerary(BaseModel):
     legs: Sequence[Leg]
 
 
-class ItineraryWithInsight(Itinerary):
-    legs: Sequence[LegWithInsight]  # pyright: ignore
-    ai_insight: str = Field(..., description="Insights from AI")
+class LegInsight(BaseModel):
+    """Insight information for a single leg of the itinerary."""
+
+    ai_insight: str = Field(..., description="AI-generated insight about the leg")
+
+
+class ItineraryInsight(BaseModel):
+    """Insight information for a given itinerary."""
+
+    ai_insight: str = Field(..., description="AI-generated insight about the itinerary")
+    leg_insights: list[LegInsight] = Field(..., description="List of insights for each leg")
