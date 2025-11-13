@@ -3,14 +3,15 @@ from collections.abc import Generator
 from fastapi.testclient import TestClient
 import pytest
 
+from app.llm.base import LLMProvider
 from app.main import app
-from app.services.llm.base import LLMProvider
+from app.schemas.itinerary import ItineraryInsight, LegInsight
 
 
 class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing."""
 
-    def __init__(self, response="Mock AI response", should_fail=False):
+    def __init__(self, response='{"itinerary_insights": []}', should_fail=False):
         self.response = response
         self.should_fail = should_fail
 
@@ -26,17 +27,48 @@ class MockLLMProvider(LLMProvider):
             yield chunk
 
 
+class MockInsightService:
+    """Mock insight service for testing."""
+
+    def __init__(self, should_fail=False):
+        self.should_fail = should_fail
+
+    async def generate_insights(self, itineraries, user_preferences=None):
+        if self.should_fail:
+            raise Exception("Mock insight service error")
+
+        # Validate at least one itinerary is required (same as real service)
+        if len(itineraries) == 0:
+            raise ValueError("At least one itinerary is required")
+
+        # Return mock insights for each itinerary
+        insights = []
+        for itinerary in itineraries:
+            # Create mock leg insights for each leg
+            leg_insights = [
+                LegInsight(ai_insight=f"Mock insight for leg {i + 1}")
+                for i, _ in enumerate(itinerary.legs)
+            ]
+
+            insight = ItineraryInsight(
+                ai_insight="Mock overall itinerary insight", leg_insights=leg_insights
+            )
+            insights.append(insight)
+
+        return insights
+
+
 @pytest.fixture(scope="function")
 def client() -> Generator[TestClient, None, None]:
     """
     Create a fresh test client for each test function.
     This ensures test isolation and prevents state leakage between tests.
     """
-    # Override the LLM provider dependency to avoid requiring real API keys
-    from app.dependencies import get_llm_provider
+    # Override the insight service dependency to avoid requiring real API keys
+    from app.dependencies import get_insight_service
 
-    mock_provider = MockLLMProvider()
-    app.dependency_overrides[get_llm_provider] = lambda: mock_provider
+    mock_service = MockInsightService()
+    app.dependency_overrides[get_insight_service] = lambda: mock_service
 
     try:
         with TestClient(app) as test_client:

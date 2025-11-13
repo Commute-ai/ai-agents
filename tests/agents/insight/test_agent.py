@@ -9,6 +9,7 @@ from jinja2 import DictLoader, Environment
 import pytest
 
 from app.agents.insight import InsightAgent
+from app.llm.base import LLMError, LLMProvider
 from app.schemas.geo import Coordinates
 from app.schemas.itinerary import (
     Itinerary,
@@ -18,7 +19,6 @@ from app.schemas.itinerary import (
 )
 from app.schemas.location import Place
 from app.schemas.preference import Preference
-from app.services.llm.base import LLMError, LLMProvider
 
 
 class MockLLMProvider(LLMProvider):

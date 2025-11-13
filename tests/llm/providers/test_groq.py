@@ -9,8 +9,8 @@ import os
 
 import pytest
 
-from app.services.llm.base import LLMError
-from app.services.llm.providers.groq import GroqProvider
+from app.llm.base import LLMError
+from app.llm.providers.groq import GroqProvider
 
 
 @pytest.mark.skipif(
@@ -22,7 +22,12 @@ class TestGroqIntegration:
     @pytest.fixture
     def groq_provider(self):
         """Create a Groq provider with real API key."""
-        return GroqProvider(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+        from unittest.mock import patch
+
+        with patch("app.llm.providers.groq.settings") as mock_settings:
+            mock_settings.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+            mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
+            return GroqProvider()
 
     @pytest.mark.asyncio
     async def test_groq_generate_basic(self, groq_provider):
@@ -67,12 +72,17 @@ class TestGroqIntegration:
     @pytest.mark.asyncio
     async def test_groq_error_handling(self):
         """Test error handling with invalid API key."""
-        provider = GroqProvider(api_key="invalid-key", model="llama-3.3-70b-versatile")
+        from unittest.mock import patch
 
-        messages = [{"role": "user", "content": "Hello"}]
+        with patch("app.llm.providers.groq.settings") as mock_settings:
+            mock_settings.GROQ_API_KEY = "invalid-key"
+            mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
+            provider = GroqProvider()
 
-        with pytest.raises(LLMError):
-            await provider.generate(messages)
+            messages = [{"role": "user", "content": "Hello"}]
+
+            with pytest.raises(LLMError):
+                await provider.generate(messages)
 
 
 @pytest.mark.asyncio
@@ -80,20 +90,18 @@ async def test_groq_config_integration():
     """Test creating Groq provider from configuration."""
     from unittest.mock import patch
 
-    from app.services.llm.utils import create_llm_from_config
+    from app.llm.factory import LLMProviderFactory, LLMProviderType
 
     # Mock the settings to use Groq
-    with patch("app.services.llm.utils.settings") as mock_settings:
-        mock_settings.LLM_PROVIDER = "groq"
+    with patch("app.llm.providers.groq.settings") as mock_settings:
         mock_settings.GROQ_API_KEY = "test-api-key"
         mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
-        mock_settings.GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
         # Mock the Groq client's generate method directly
-        with patch("app.services.llm.providers.groq.GroqProvider.generate") as mock_generate:
+        with patch("app.llm.providers.groq.GroqProvider.generate") as mock_generate:
             mock_generate.return_value = "Hello! How can I help you?"
 
-            provider = create_llm_from_config()
+            provider = LLMProviderFactory.create_provider(LLMProviderType.GROQ)
 
             # Test that it can generate a response
             messages = [{"role": "user", "content": "Hello!"}]
@@ -105,8 +113,13 @@ async def test_groq_config_integration():
 
 def test_groq_provider_without_api_key():
     """Test that Groq provider can be instantiated without real API key for testing."""
-    provider = GroqProvider(api_key="test-key", model="llama-3.3-70b-versatile")
+    from unittest.mock import patch
 
-    assert provider._api_key == "test-key"
-    assert provider._model == "llama-3.3-70b-versatile"
-    assert provider._client is not None
+    with patch("app.llm.providers.groq.settings") as mock_settings:
+        mock_settings.GROQ_API_KEY = "test-key"
+        mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
+        provider = GroqProvider()
+
+        assert provider._api_key == "test-key"
+        assert provider._model == "llama-3.3-70b-versatile"
+        assert provider._client is not None
