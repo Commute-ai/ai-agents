@@ -8,7 +8,7 @@ from typing import ClassVar
 import jinja2
 from pydantic import BaseModel
 
-from app.services.llm.base import LLMProvider
+from app.llm.base import LLMProvider
 
 
 class BaseAgent:
@@ -26,9 +26,6 @@ class BaseAgent:
     def __init__(self, llm_provider: LLMProvider):
         """
         Initialize the agent with an LLM provider.
-
-        Args:
-            llm_provider: The LLM provider to use for generation
         """
         self.llm_provider = llm_provider
 

@@ -16,9 +16,6 @@ from ..base import LLMConnectionError, LLMProvider, LLMRateLimitError, LLMValida
 class GroqProvider(LLMProvider):
     """
     Groq LLM provider using the Chat Completions API.
-
-    Implements the LLMProvider interface for Groq's fast inference models.
-    Groq uses an OpenAI-compatible API format.
     """
 
     def __init__(
@@ -35,15 +32,6 @@ class GroqProvider(LLMProvider):
     def _should_use_json_format(self, messages: list[dict[str, str]]) -> bool:
         """
         Determine if JSON format should be used based on message content.
-
-        Groq requires that messages contain the word "json" when using json_object format.
-        This method checks if any message mentions JSON/json to decide if JSON format is appropriate.
-
-        Args:
-            messages: List of message dictionaries
-
-        Returns:
-            True if JSON format should be used, False otherwise
         """
         for message in messages:
             content = message.get("content", "").lower()
@@ -60,15 +48,6 @@ class GroqProvider(LLMProvider):
     ) -> str:
         """
         Generate text response using Groq Chat Completions API.
-
-        Args:
-            messages: List of message dictionaries
-            max_tokens: Maximum tokens to generate (default: 2048)
-            temperature: Sampling temperature (default: 0.7)
-            **kwargs: Additional Groq-specific parameters
-
-        Returns:
-            Generated text response
         """
         # Set defaults
         max_tokens = max_tokens or 2048
@@ -130,15 +109,6 @@ class GroqProvider(LLMProvider):
     ) -> AsyncGenerator[str, None]:
         """
         Generate streaming text response using Groq Chat Completions API.
-
-        Args:
-            messages: List of message dictionaries
-            max_tokens: Maximum tokens to generate (default: 1000)
-            temperature: Sampling temperature (default: 0.7)
-            **kwargs: Additional Groq-specific parameters
-
-        Yields:
-            Chunks of generated text
         """
         return self._stream_generator(messages, max_tokens, temperature, **kwargs)
 
