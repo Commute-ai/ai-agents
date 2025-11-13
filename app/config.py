@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     OPENAI_MODEL: str = "gpt-4o-mini"
 
+    # Weather Configuration
+    OPENWEATHERMAP_API_KEY: str | None = None
+
     class ConfigDict:
         env_file = ".env"
         extra = "ignore"
