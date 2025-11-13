@@ -22,7 +22,7 @@ class GroqProvider(LLMProvider):
     def __init__(
         self,
         api_key: str,
-        model: str = "llama-3.3-70b-versatile",
+        model: str,
         **kwargs: Any,
     ) -> None:
         """
