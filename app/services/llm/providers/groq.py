@@ -8,6 +8,8 @@ from typing import Any, cast
 from groq import AsyncGroq
 from groq.types.chat import ChatCompletionMessageParam
 
+from app.config import settings
+
 from ..base import LLMConnectionError, LLMProvider, LLMRateLimitError, LLMValidationError
 
 
@@ -21,22 +23,14 @@ class GroqProvider(LLMProvider):
 
     def __init__(
         self,
-        api_key: str,
-        model: str,
         **kwargs: Any,
     ) -> None:
         """
         Initialize Groq provider.
-
-        Args:
-            api_key: Groq API key
-            model: Groq model name (e.g., "llama-3.3-70b-versatile", "mixtral-8x7b-32768")
-            base_url: Optional custom API base URL
-            **kwargs: Additional configuration options
         """
-        self._api_key = api_key
-        self._model = model
-        self._client = AsyncGroq(api_key=api_key, **kwargs)
+        self._api_key = settings.GROQ_API_KEY
+        self._model = settings.GROQ_MODEL
+        self._client = AsyncGroq(api_key=self._api_key, **kwargs)
 
     def _should_use_json_format(self, messages: list[dict[str, str]]) -> bool:
         """
