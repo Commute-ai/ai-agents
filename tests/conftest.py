@@ -1,11 +1,14 @@
 from collections.abc import Generator
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 import pytest
 
 from app.llm.base import LLMProvider
 from app.main import app
+from app.schemas.geo import Coordinates
 from app.schemas.itinerary import ItineraryInsight, LegInsight
+from app.schemas.weather import WeatherCondition
 
 
 class MockLLMProvider(LLMProvider):
@@ -56,6 +59,26 @@ class MockInsightService:
             insights.append(insight)
 
         return insights
+
+
+class MockWeatherService:
+    """Mock weather service for testing."""
+
+    def __init__(self, should_fail=False):
+        self.should_fail = should_fail
+
+    async def get_current_weather(self, coordinates: Coordinates):
+        if self.should_fail:
+            raise Exception("Mock weather service error")
+
+        return WeatherCondition(
+            temperature=10.0,
+            description="Sunny",
+            humidity=50,
+            wind_speed=5.0,
+            precipitation=0.0,
+            timestamp=datetime.now(),
+        )
 
 
 @pytest.fixture(scope="function")

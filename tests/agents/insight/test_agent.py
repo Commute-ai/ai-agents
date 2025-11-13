@@ -9,7 +9,7 @@ from jinja2 import DictLoader, Environment
 import pytest
 
 from app.agents.insight import InsightAgent
-from app.llm.base import LLMError, LLMProvider
+from app.llm.base import LLMError
 from app.schemas.geo import Coordinates
 from app.schemas.itinerary import (
     Itinerary,
@@ -19,43 +19,17 @@ from app.schemas.itinerary import (
 )
 from app.schemas.location import Place
 from app.schemas.preference import Preference
-
-
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing."""
-
-    def __init__(self, response="Mock insight response", should_fail=False, fail_with=LLMError):
-        self.response = response
-        self.should_fail = should_fail
-        self.fail_with = fail_with
-        self.generate_calls = []
-
-    async def generate(self, messages, max_tokens=None, temperature=None, **kwargs):
-        self.generate_calls.append(
-            {
-                "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "kwargs": kwargs,
-            }
-        )
-
-        if self.should_fail:
-            raise self.fail_with("Mock LLM error")
-
-        return self.response
-
-    async def generate_stream(self, messages, max_tokens=None, temperature=None, **kwargs):
-        if self.should_fail:
-            raise self.fail_with("Mock LLM error")
-
-        for chunk in ["Mock ", "streaming ", "response"]:
-            yield chunk
+from tests.conftest import MockLLMProvider, MockWeatherService
 
 
 @pytest.fixture
 def mock_llm():
     return MockLLMProvider()
+
+
+@pytest.fixture
+def mock_weather_service():
+    return MockWeatherService()
 
 
 @pytest.fixture
@@ -232,9 +206,13 @@ class TestInsightAgentIntegration:
     """Integration tests for the insight agent."""
 
     @pytest.fixture
-    def real_insight_agent(self, mock_llm):
+    def real_insight_agent(self, mock_llm, mock_weather_service):
         """Create an insight agent with real template loading."""
-        return InsightAgent(mock_llm)
+        try:
+            insight_agent = InsightAgent(mock_llm)
+        except ValueError as e:
+            pass
+        insight_agent._weather_service = mock_weather_service
 
     @pytest.mark.asyncio
     async def test_template_rendering_integration(self, real_insight_agent, sample_itinerary):
