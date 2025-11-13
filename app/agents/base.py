@@ -3,15 +3,18 @@ Base agent class for AI-powered tasks.
 """
 
 import importlib.resources
-from typing import ClassVar
+from typing import Generic, TypeVar
 
 import jinja2
 from pydantic import BaseModel
 
 from app.llm.base import LLMProvider
 
+TInput = TypeVar("TInput", bound=BaseModel)
+TOutput = TypeVar("TOutput", bound=BaseModel)
 
-class BaseAgent:
+
+class BaseAgent(Generic[TInput, TOutput]):
     """
     Simplified base agent for AI-powered tasks.
 
@@ -20,8 +23,9 @@ class BaseAgent:
     """
 
     # Subclasses should define these
-    input_model: ClassVar[type[BaseModel]]
-    output_model: ClassVar[type[BaseModel]]
+
+    input_model: type[TInput]
+    output_model: type[TOutput]
 
     def __init__(self, llm_provider: LLMProvider):
         """
@@ -29,7 +33,7 @@ class BaseAgent:
         """
         self.llm_provider = llm_provider
 
-    async def execute(self, input_data: BaseModel) -> BaseModel:
+    async def execute(self, input_data: TInput) -> TOutput:
         """
         Execute the agent with input data and return structured output.
 

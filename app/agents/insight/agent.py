@@ -8,6 +8,8 @@ from app.agents.base import BaseAgent
 from app.llm.base import LLMProvider
 from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
+from app.schemas.weather import WeatherCondition
+from app.services.weather import WeatherService
 
 
 class InsightRequest(BaseModel):
@@ -15,6 +17,7 @@ class InsightRequest(BaseModel):
 
     itineraries: list[Itinerary]
     user_preferences: list[Preference] | None = None
+    weather_conditions: WeatherCondition | None = None
 
     @field_validator("itineraries")
     @classmethod
@@ -39,3 +42,40 @@ class InsightAgent(BaseAgent):
     def __init__(self, llm_provider: LLMProvider):
         """Initialize the insight agent with an LLM provider."""
         super().__init__(llm_provider)
+        self._weather_service = WeatherService()
+
+    async def _get_weather_for_itinerary(self, itinerary: Itinerary) -> WeatherCondition | None:
+        """Get weather conditions for an itinerary's start location and time."""
+        try:
+            # Extract coordinates from the first leg's from_place if available
+            if itinerary.legs and itinerary.legs[0].from_place:
+                coordinates = itinerary.legs[0].from_place.coordinates
+                lat = coordinates.latitude
+                lon = coordinates.longitude
+            else:
+                # Default to Helsinki coordinates
+                lat, lon = 60.1695, 24.9354
+
+            return await self._weather_service.get_current_weather(lat=lat, lon=lon)
+        except Exception:
+            # Return None if weather fetch fails - agent should still work without weather
+            return None
+
+    async def execute(self, input_data: InsightRequest) -> InsightResponse:
+        """Execute insight generation with weather context."""
+        # Enhance request with weather data if not provided
+        if not input_data.weather_conditions and input_data.itineraries:
+            # Use the start time of the first itinerary to determine weather context
+            first_itinerary = input_data.itineraries[0]
+            weather_conditions = await self._get_weather_for_itinerary(first_itinerary)
+
+            # Create enhanced request with weather data
+            enhanced_request = InsightRequest(
+                itineraries=input_data.itineraries,
+                user_preferences=input_data.user_preferences,
+                weather_conditions=weather_conditions,
+            )
+        else:
+            enhanced_request = input_data
+
+        return await super().execute(enhanced_request)

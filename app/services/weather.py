@@ -15,21 +15,13 @@ class WeatherService:
         self._api_key = settings.OPENWEATHERMAP_API_KEY
         self._base_url = "https://api.openweathermap.org/data/2.5/weather"
 
+        if not self._api_key:
+            raise ValueError("Missing OpenWeatherMap API key")
+
     async def get_current_weather(
         self, lat: float = 60.1695, lon: float = 24.9354
     ) -> WeatherCondition | None:
         """Get current weather for Helsinki (default) or specified coordinates."""
-        if not self._api_key:
-            # Return mock data if no API key is configured
-            return WeatherCondition(
-                temperature=12.0,
-                description="partly cloudy",
-                humidity=65,
-                wind_speed=3.5,
-                precipitation=0.0,
-                timestamp=datetime.now(),
-            )
-
         params = {"lat": str(lat), "lon": str(lon), "appid": self._api_key, "units": "metric"}
         timeout = aiohttp.ClientTimeout(total=5.0)
 
