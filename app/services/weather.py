@@ -5,6 +5,7 @@ from datetime import datetime
 import aiohttp
 
 from app.config import settings
+from app.schemas.geo import Coordinates
 from app.schemas.weather import WeatherCondition
 
 
@@ -18,11 +19,17 @@ class WeatherService:
         if not self._api_key:
             raise ValueError("Missing OpenWeatherMap API key")
 
-    async def get_current_weather(
-        self, lat: float = 60.1695, lon: float = 24.9354
-    ) -> WeatherCondition | None:
+    async def get_current_weather(self, coordinates: Coordinates) -> WeatherCondition | None:
         """Get current weather for Helsinki (default) or specified coordinates."""
-        params = {"lat": str(lat), "lon": str(lon), "appid": self._api_key, "units": "metric"}
+        if not self._api_key:
+            raise ValueError("Missing OpenWeatherMap API key")
+
+        params = {
+            "lat": str(coordinates.latitude),
+            "lon": str(coordinates.longitude),
+            "appid": self._api_key,
+            "units": "metric",
+        }
         timeout = aiohttp.ClientTimeout(total=5.0)
 
         try:

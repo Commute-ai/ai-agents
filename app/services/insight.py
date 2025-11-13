@@ -1,6 +1,4 @@
-from typing import cast
-
-from app.agents.insight.agent import InsightAgent, InsightRequest, InsightResponse
+from app.agents.insight.agent import InsightAgent, InsightRequest
 from app.llm.factory import LLMProviderFactory, LLMProviderType
 from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
@@ -26,6 +24,6 @@ class InsightService:
         request = InsightRequest(itineraries=itineraries, user_preferences=user_preferences)
 
         # Execute the agent
-        response = cast(InsightResponse, await self.insight_agent.execute(request))
+        response = await self.insight_agent.execute(request)
 
         return response.itinerary_insights

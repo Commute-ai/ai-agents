@@ -6,6 +6,7 @@ from pydantic import BaseModel, field_validator
 
 from app.agents.base import BaseAgent
 from app.llm.base import LLMProvider
+from app.schemas.geo import Coordinates
 from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
 from app.schemas.weather import WeatherCondition
@@ -50,13 +51,11 @@ class InsightAgent(BaseAgent):
             # Extract coordinates from the first leg's from_place if available
             if itinerary.legs and itinerary.legs[0].from_place:
                 coordinates = itinerary.legs[0].from_place.coordinates
-                lat = coordinates.latitude
-                lon = coordinates.longitude
             else:
                 # Default to Helsinki coordinates
-                lat, lon = 60.1695, 24.9354
+                coordinates = Coordinates(latitude=60.1695, longitude=24.9354)
 
-            return await self._weather_service.get_current_weather(lat=lat, lon=lon)
+            return await self._weather_service.get_current_weather(coordinates)
         except Exception:
             # Return None if weather fetch fails - agent should still work without weather
             return None
