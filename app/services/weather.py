@@ -9,6 +9,14 @@ from app.schemas.geo import Coordinates
 from app.schemas.weather import WeatherCondition
 
 
+class WeatherServiceError(Exception):
+    """Base class for weather service errors."""
+
+
+class WeatherServiceUnavailableError(WeatherServiceError):
+    """Weather service is unavailable."""
+
+
 class WeatherService:
     """Service for fetching weather information from OpenWeatherMap."""
 
@@ -17,9 +25,9 @@ class WeatherService:
         self._base_url = "https://api.openweathermap.org/data/2.5/weather"
 
         if not self._api_key:
-            raise ValueError("Missing OpenWeatherMap API key")
+            raise ValueError("Missing OPENWEATHERMAP_API_KEY")
 
-    async def get_current_weather(self, coordinates: Coordinates) -> WeatherCondition | None:
+    async def get_current_weather(self, coordinates: Coordinates) -> WeatherCondition:
         """Get current weather for Helsinki (default) or specified coordinates."""
         if not self._api_key:
             raise ValueError("Missing OpenWeatherMap API key")
@@ -36,7 +44,7 @@ class WeatherService:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self._base_url, params=params, timeout=timeout) as response:
                     if response.status != 200:
-                        return None
+                        raise WeatherServiceUnavailableError(f"{response.status} {response.reason}")
 
                     data = await response.json()
 
@@ -48,5 +56,5 @@ class WeatherService:
                         precipitation=data.get("rain", {}).get("1h", 0.0),
                         timestamp=datetime.now(),
                     )
-        except (TimeoutError, aiohttp.ClientError, KeyError):
-            return None
+        except (TimeoutError, aiohttp.ClientError, KeyError) as error:
+            raise WeatherServiceUnavailableError("Failed to fetch weather data") from error

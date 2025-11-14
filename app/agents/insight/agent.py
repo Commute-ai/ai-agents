@@ -2,6 +2,8 @@
 Insight agent for generating AI-powered travel itinerary analysis.
 """
 
+import logging
+
 from pydantic import BaseModel, field_validator
 
 from app.agents.base import BaseAgent
@@ -10,7 +12,9 @@ from app.schemas.geo import Coordinates
 from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
 from app.schemas.weather import WeatherCondition
-from app.services.weather import WeatherService
+from app.services.weather import WeatherService, WeatherServiceError
+
+logger = logging.getLogger(__name__)
 
 
 class InsightRequest(BaseModel):
@@ -40,13 +44,16 @@ class InsightAgent(BaseAgent):
     input_model = InsightRequest
     output_model = InsightResponse
 
-    def __init__(self, llm_provider: LLMProvider):
-        """Initialize the insight agent with an LLM provider."""
+    def __init__(self, llm_provider: LLMProvider, weather_service: WeatherService | None = None):
+        """Initialize the insight agent with an LLM provider and optional weather service."""
         super().__init__(llm_provider)
-        self._weather_service = WeatherService()
+        self._weather_service = weather_service
 
     async def _get_weather_for_itinerary(self, itinerary: Itinerary) -> WeatherCondition | None:
         """Get weather conditions for an itinerary's start location and time."""
+        if not self._weather_service:
+            return None
+
         try:
             # Extract coordinates from the first leg's from_place if available
             if itinerary.legs and itinerary.legs[0].from_place:
@@ -56,8 +63,8 @@ class InsightAgent(BaseAgent):
                 coordinates = Coordinates(latitude=60.1695, longitude=24.9354)
 
             return await self._weather_service.get_current_weather(coordinates)
-        except Exception:
-            # Return None if weather fetch fails - agent should still work without weather
+        except (ValueError, WeatherServiceError) as error:
+            logger.warning(f"Failed to get weather conditions for itinerary: {error}")
             return None
 
     async def execute(self, input_data: InsightRequest) -> InsightResponse:
