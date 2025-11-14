@@ -1,7 +1,6 @@
 """Tests for the insight agent."""
 
 from datetime import datetime
-from unittest.mock import patch
 
 import pytest
 
@@ -83,10 +82,7 @@ class TestInsightAgent:
     @pytest.fixture
     def insight_agent(self, mock_llm, mock_weather_service):
         """Create an insight agent with mocked dependencies."""
-        with patch("app.agents.insight.agent.WeatherService") as mock_weather_class:
-            mock_weather_class.return_value = mock_weather_service
-            agent = InsightAgent(mock_llm)
-            return agent
+        return InsightAgent(mock_llm, mock_weather_service)
 
     @pytest.mark.asyncio
     async def test_successful_insight_generation(self, insight_agent, sample_itinerary):
@@ -204,6 +200,21 @@ class TestInsightAgent:
         assert len(result.itinerary_insights) == 1
         assert "Route works regardless" in result.itinerary_insights[0].ai_insight
 
+    @pytest.mark.asyncio
+    async def test_no_weather_service_provided(self, mock_llm, sample_itinerary):
+        """Test that agent works when no weather service is provided."""
+        # Create agent without weather service
+        insight_agent = InsightAgent(mock_llm, weather_service=None)
+
+        insight_agent.llm_provider.response = '{"itinerary_insights": [{"ai_insight": "Insights work without weather.", "leg_insights": []}]}'
+
+        request = InsightRequest(itineraries=[sample_itinerary])
+        result = await insight_agent.execute(request)
+
+        # Agent should work fine without weather service
+        assert len(result.itinerary_insights) == 1
+        assert "Insights work without weather" in result.itinerary_insights[0].ai_insight
+
 
 class TestInsightAgentTemplates:
     """Test template rendering and LLM integration."""
@@ -211,10 +222,7 @@ class TestInsightAgentTemplates:
     @pytest.fixture
     def template_agent(self, mock_llm, mock_weather_service):
         """Create an insight agent with mocked weather service for template testing."""
-        with patch("app.agents.insight.agent.WeatherService") as mock_weather_class:
-            mock_weather_class.return_value = mock_weather_service
-            agent = InsightAgent(mock_llm)
-            return agent
+        return InsightAgent(mock_llm, mock_weather_service)
 
     @pytest.mark.asyncio
     async def test_template_rendering_integration(self, template_agent, sample_itinerary):

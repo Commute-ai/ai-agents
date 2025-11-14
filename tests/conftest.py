@@ -9,6 +9,7 @@ from app.main import app
 from app.schemas.geo import Coordinates
 from app.schemas.itinerary import ItineraryInsight, LegInsight
 from app.schemas.weather import WeatherCondition
+from app.services.weather import WeatherServiceError
 
 
 class MockLLMProvider(LLMProvider):
@@ -80,7 +81,7 @@ class MockWeatherService:
 
     async def get_current_weather(self, coordinates: Coordinates):
         if self.should_fail:
-            raise Exception("Mock weather service error")
+            raise WeatherServiceError("Mock weather service error")
 
         return WeatherCondition(
             temperature=10.0,
