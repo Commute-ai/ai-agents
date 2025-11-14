@@ -14,13 +14,24 @@ from app.schemas.weather import WeatherCondition
 class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing."""
 
-    def __init__(self, response='{"itinerary_insights": []}', should_fail=False):
+    def __init__(self, response='{"itinerary_insights": []}', should_fail=False, fail_with=None):
         self.response = response
         self.should_fail = should_fail
+        self.fail_with = fail_with or Exception
+        self.generate_calls = []
 
     async def generate(self, messages, max_tokens=None, temperature=None, **kwargs):
+        # Record the call for assertion purposes
+        call_info = {
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            **kwargs,
+        }
+        self.generate_calls.append(call_info)
+
         if self.should_fail:
-            raise Exception("Mock LLM error")
+            raise self.fail_with("Mock LLM error")
         return self.response
 
     async def generate_stream(self, messages, max_tokens=None, temperature=None, **kwargs):
