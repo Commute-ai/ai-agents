@@ -7,6 +7,15 @@ User Preferences:
 {% endfor %}
 
 {% endif %}
+{% if weather_conditions %}
+Current Weather Conditions:
+Temperature: {{ weather_conditions.temperature|round(1) }}°C
+Conditions: {{ weather_conditions.description }}
+Humidity: {{ weather_conditions.humidity }}%
+Wind Speed: {{ weather_conditions.wind_speed|round(1) }} m/s
+{% if weather_conditions.precipitation > 0 %}Precipitation: {{ weather_conditions.precipitation|round(1) }} mm/h{% endif %}
+
+{% endif %}
 Route Options:
 {% for itinerary in itineraries %}
 
