@@ -24,7 +24,9 @@ class InsightService:
         except ValueError as error:
             # Weather service can't be initialized (likely missing API key)
             # This is fine - insights will work without weather data
-            logging.warning("Weather service is not configured, proceeding without it: ", str(error))
+            logging.warning(
+                "Weather service is not configured, proceeding without it: ", str(error)
+            )
             self._weather_service = None
 
         self.insight_agent = InsightAgent(llm_provider)

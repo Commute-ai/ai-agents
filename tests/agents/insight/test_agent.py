@@ -80,9 +80,9 @@ class TestInsightAgent:
     """Test the InsightAgent class with mocked dependencies."""
 
     @pytest.fixture
-    def insight_agent(self, mock_llm, mock_weather_service):
+    def insight_agent(self, mock_llm):
         """Create an insight agent with mocked dependencies."""
-        return InsightAgent(mock_llm, mock_weather_service)
+        return InsightAgent(mock_llm)
 
     @pytest.mark.asyncio
     async def test_successful_insight_generation(self, insight_agent, sample_itinerary):
@@ -174,46 +174,15 @@ class TestInsightAgent:
             await insight_agent.execute(request)
 
     @pytest.mark.asyncio
-    async def test_weather_service_integration(self, insight_agent, sample_itinerary):
-        """Test that weather service is called and integrates properly."""
-        insight_agent.llm_provider.response = '{"itinerary_insights": [{"ai_insight": "Great weather for traveling!", "leg_insights": []}]}'
+    async def test_agent_basic_functionality(self, insight_agent, sample_itinerary):
+        """Test basic agent functionality without weather service."""
+        insight_agent.llm_provider.response = '{"itinerary_insights": [{"ai_insight": "Efficient route with good connections.", "leg_insights": []}]}'
 
         request = InsightRequest(itineraries=[sample_itinerary])
         result = await insight_agent.execute(request)
 
-        # Verify weather service was called
-        assert not insight_agent._weather_service.should_fail
         assert len(result.itinerary_insights) == 1
-
-    @pytest.mark.asyncio
-    async def test_weather_service_failure_handling(self, insight_agent, sample_itinerary):
-        """Test that agent works even when weather service fails."""
-        # Make weather service fail
-        insight_agent._weather_service.should_fail = True
-
-        insight_agent.llm_provider.response = '{"itinerary_insights": [{"ai_insight": "Route works regardless of weather.", "leg_insights": []}]}'
-
-        request = InsightRequest(itineraries=[sample_itinerary])
-        result = await insight_agent.execute(request)
-
-        # Agent should still work despite weather service failure
-        assert len(result.itinerary_insights) == 1
-        assert "Route works regardless" in result.itinerary_insights[0].ai_insight
-
-    @pytest.mark.asyncio
-    async def test_no_weather_service_provided(self, mock_llm, sample_itinerary):
-        """Test that agent works when no weather service is provided."""
-        # Create agent without weather service
-        insight_agent = InsightAgent(mock_llm, weather_service=None)
-
-        insight_agent.llm_provider.response = '{"itinerary_insights": [{"ai_insight": "Insights work without weather.", "leg_insights": []}]}'
-
-        request = InsightRequest(itineraries=[sample_itinerary])
-        result = await insight_agent.execute(request)
-
-        # Agent should work fine without weather service
-        assert len(result.itinerary_insights) == 1
-        assert "Insights work without weather" in result.itinerary_insights[0].ai_insight
+        assert "Efficient route" in result.itinerary_insights[0].ai_insight
 
 
 class TestInsightAgentTemplates:
@@ -222,7 +191,7 @@ class TestInsightAgentTemplates:
     @pytest.fixture
     def template_agent(self, mock_llm, mock_weather_service):
         """Create an insight agent with mocked weather service for template testing."""
-        return InsightAgent(mock_llm, mock_weather_service)
+        return InsightAgent(mock_llm)
 
     @pytest.mark.asyncio
     async def test_template_rendering_integration(self, template_agent, sample_itinerary):
