@@ -15,11 +15,14 @@ class Settings(BaseSettings):
 
     # Groq Configuration
     GROQ_API_KEY: str | None = None
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     # OpenAI Configuration (fallback)
     OPENAI_API_KEY: str | None = None
     OPENAI_MODEL: str = "gpt-4o-mini"
+
+    # Weather Configuration
+    OPENWEATHERMAP_API_KEY: str | None = None
 
     class ConfigDict:
         env_file = ".env"

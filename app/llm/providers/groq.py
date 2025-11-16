@@ -8,48 +8,30 @@ from typing import Any, cast
 from groq import AsyncGroq
 from groq.types.chat import ChatCompletionMessageParam
 
+from app.config import settings
+
 from ..base import LLMConnectionError, LLMProvider, LLMRateLimitError, LLMValidationError
 
 
 class GroqProvider(LLMProvider):
     """
     Groq LLM provider using the Chat Completions API.
-
-    Implements the LLMProvider interface for Groq's fast inference models.
-    Groq uses an OpenAI-compatible API format.
     """
 
     def __init__(
         self,
-        api_key: str,
-        model: str = "llama-3.3-70b-versatile",
         **kwargs: Any,
     ) -> None:
         """
         Initialize Groq provider.
-
-        Args:
-            api_key: Groq API key
-            model: Groq model name (e.g., "llama-3.3-70b-versatile", "mixtral-8x7b-32768")
-            base_url: Optional custom API base URL
-            **kwargs: Additional configuration options
         """
-        self._api_key = api_key
-        self._model = model
-        self._client = AsyncGroq(api_key=api_key, **kwargs)
+        self._api_key = settings.GROQ_API_KEY
+        self._model = settings.GROQ_MODEL
+        self._client = AsyncGroq(api_key=self._api_key, **kwargs)
 
     def _should_use_json_format(self, messages: list[dict[str, str]]) -> bool:
         """
         Determine if JSON format should be used based on message content.
-
-        Groq requires that messages contain the word "json" when using json_object format.
-        This method checks if any message mentions JSON/json to decide if JSON format is appropriate.
-
-        Args:
-            messages: List of message dictionaries
-
-        Returns:
-            True if JSON format should be used, False otherwise
         """
         for message in messages:
             content = message.get("content", "").lower()
@@ -66,15 +48,6 @@ class GroqProvider(LLMProvider):
     ) -> str:
         """
         Generate text response using Groq Chat Completions API.
-
-        Args:
-            messages: List of message dictionaries
-            max_tokens: Maximum tokens to generate (default: 2048)
-            temperature: Sampling temperature (default: 0.7)
-            **kwargs: Additional Groq-specific parameters
-
-        Returns:
-            Generated text response
         """
         # Set defaults
         max_tokens = max_tokens or 2048
@@ -136,15 +109,6 @@ class GroqProvider(LLMProvider):
     ) -> AsyncGenerator[str, None]:
         """
         Generate streaming text response using Groq Chat Completions API.
-
-        Args:
-            messages: List of message dictionaries
-            max_tokens: Maximum tokens to generate (default: 1000)
-            temperature: Sampling temperature (default: 0.7)
-            **kwargs: Additional Groq-specific parameters
-
-        Yields:
-            Chunks of generated text
         """
         return self._stream_generator(messages, max_tokens, temperature, **kwargs)
 
