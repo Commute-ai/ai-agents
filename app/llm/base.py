@@ -1,7 +1,3 @@
-"""
-Abstract base class for LLM providers.
-"""
-
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -9,19 +5,13 @@ from typing import Any
 
 class LLMProvider(ABC):
     """
-    Abstract interface for Large Language Model providers.
-
-    Defines common interface for generating text using different LLM services
-    like Anthropic, OpenAI, Ollama, etc.
+    Abstract interface for LLM providers.
     """
 
     @abstractmethod
     def __init__(self, **kwargs: Any) -> None:
         """
         Initialize the LLM provider with configuration.
-
-        Args:
-            **kwargs: Provider-specific configuration options
         """
         pass
 

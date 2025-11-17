@@ -1,10 +1,11 @@
 [project]
 name = "ai-agents"
-version = "0.7.0"
+version = "0.8.0"
 description = "AI-powered route analysis and recommendations"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiohttp>=3.13.2",
     "colorlog>=6.10.1",
     "fastapi>=0.119.0",
     "groq>=0.12.0",

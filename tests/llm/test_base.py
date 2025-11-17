@@ -6,14 +6,14 @@ from unittest.mock import patch
 
 import pytest
 
-from app.services.llm.base import (
+from app.llm.base import (
     LLMConnectionError,
     LLMError,
     LLMProvider,
     LLMRateLimitError,
     LLMValidationError,
 )
-from app.services.llm.factory import LLMProviderFactory
+from app.llm.factory import LLMProviderFactory
 
 
 class MockLLMProvider(LLMProvider):
@@ -127,7 +127,7 @@ class TestLLMProviderFactory:
         """Test that the factory class exists."""
         assert hasattr(LLMProviderFactory, "create_provider")
 
-    @patch("app.services.llm.factory.LLMProviderFactory.create_provider")
+    @patch("app.llm.factory.LLMProviderFactory.create_provider")
     def test_factory_can_be_mocked(self, mock_create):
         """Test that factory can be mocked for testing."""
         mock_provider = MockLLMProvider()

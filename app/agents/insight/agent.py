@@ -2,12 +2,17 @@
 Insight agent for generating AI-powered travel itinerary analysis.
 """
 
+import logging
+
 from pydantic import BaseModel, field_validator
 
 from app.agents.base import BaseAgent
+from app.llm.base import LLMProvider
 from app.schemas.itinerary import Itinerary, ItineraryInsight
 from app.schemas.preference import Preference
-from app.services.llm.base import LLMProvider
+from app.schemas.weather import WeatherCondition
+
+logger = logging.getLogger(__name__)
 
 
 class InsightRequest(BaseModel):
@@ -15,6 +20,7 @@ class InsightRequest(BaseModel):
 
     itineraries: list[Itinerary]
     user_preferences: list[Preference] | None = None
+    weather_conditions: WeatherCondition | None = None
 
     @field_validator("itineraries")
     @classmethod
@@ -37,5 +43,4 @@ class InsightAgent(BaseAgent):
     output_model = InsightResponse
 
     def __init__(self, llm_provider: LLMProvider):
-        """Initialize the insight agent with an LLM provider."""
         super().__init__(llm_provider)

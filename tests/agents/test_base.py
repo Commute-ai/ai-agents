@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import pytest
 
 from app.agents.base import AgentError, AgentProcessingError, AgentValidationError, BaseAgent
-from app.services.llm.base import LLMError, LLMProvider
+from app.llm.base import LLMError, LLMProvider
 
 
 class MockLLMProvider(LLMProvider):
