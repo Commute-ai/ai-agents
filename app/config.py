@@ -7,7 +7,7 @@ load_dotenv()
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Commute.ai - AI Agents"
     PROJECT_DESCRIPTION: str = "AI-powered route analysis and recommendations"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.1.0"
     API_V1_STR: str = "/api/v1"
 
     # LLM Configuration
